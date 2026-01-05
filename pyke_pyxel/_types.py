@@ -276,6 +276,11 @@ class coord:
         the resulting grid column/row are adjusted so the cloned tile maps
         appropriately to the direction of movement. Without a direction the
         grid location is computed from the cloned midpoint.
+
+        Args:
+            x (int): the horizontal pixels by which to move the cloned `coord`
+            y (int): the vertical pixels by which to move the cloned `coord`
+            direction (DIRECTION, optional): the optional direction in which to clone the `coord`
         """
 
         cloned = coord.with_xy(self._x + x, self._y + y, self.size)
@@ -313,12 +318,13 @@ class coord:
 
         return coord.with_xy(x, y, self.size)
 
-    def collides_with(self, coord: "coord"):
-
+    def collides_with(self, coord: "coord", tolerance: int = 1):
         """Return True if this `coord` collides with another `coord` using AABB.
+        This uses an axis-aligned bounding box (AABB) test with a small tolerance to reduce false positives on exact-edge overlaps.
 
-        This uses an axis-aligned bounding box (AABB) test with a small
-        tolerance to reduce false positives on exact-edge overlaps.
+        Args:
+            coord (coord): the `coord` to check against this `coord`
+            tolerance (int, optional): the pixel tolerance to allow, defaults to `1`
         """
 
         w = h = self.size
@@ -332,7 +338,6 @@ class coord:
         self_x = self._x
         self_y = self._y
         
-        tolerance = 1
         return (
             min_x   <   (self_x + w - tolerance) and
             max_x   >   (self_x + tolerance) and

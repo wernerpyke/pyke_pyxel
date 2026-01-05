@@ -119,8 +119,13 @@
     * [adjacent\_openable](#pyke_pyxel.rpg.player.Player.adjacent_openable)
 * [actor](#pyke_pyxel.rpg.actor)
   * [Actor](#pyke_pyxel.rpg.actor.Actor)
+    * [\_\_init\_\_](#pyke_pyxel.rpg.actor.Actor.__init__)
     * [launch\_projectile](#pyke_pyxel.rpg.actor.Actor.launch_projectile)
     * [remove](#pyke_pyxel.rpg.actor.Actor.remove)
+    * [name](#pyke_pyxel.rpg.actor.Actor.name)
+    * [position](#pyke_pyxel.rpg.actor.Actor.position)
+    * [sprite](#pyke_pyxel.rpg.actor.Actor.sprite)
+    * [sprite\_id](#pyke_pyxel.rpg.actor.Actor.sprite_id)
   * [MovableActor](#pyke_pyxel.rpg.actor.MovableActor)
     * [\_\_init\_\_](#pyke_pyxel.rpg.actor.MovableActor.__init__)
     * [set\_position](#pyke_pyxel.rpg.actor.MovableActor.set_position)
@@ -672,18 +677,27 @@ the resulting grid column/row are adjusted so the cloned tile maps
 appropriately to the direction of movement. Without a direction the
 grid location is computed from the cloned midpoint.
 
+**Arguments**:
+
+- `x` _int_ - the horizontal pixels by which to move the cloned `coord`
+- `y` _int_ - the vertical pixels by which to move the cloned `coord`
+- `direction` _DIRECTION, optional_ - the optional direction in which to clone the `coord`
+
 <a id="pyke_pyxel._types.coord.collides_with"></a>
 
 #### collides\_with
 
 ```python
-def collides_with(coord: "coord")
+def collides_with(coord: "coord", tolerance: int = 1)
 ```
 
 Return True if this `coord` collides with another `coord` using AABB.
+This uses an axis-aligned bounding box (AABB) test with a small tolerance to reduce false positives on exact-edge overlaps.
 
-This uses an axis-aligned bounding box (AABB) test with a small
-tolerance to reduce false positives on exact-edge overlaps.
+**Arguments**:
+
+- `coord` _coord_ - the `coord` to check against this `coord`
+- `tolerance` _int, optional_ - the pixel tolerance to allow, defaults to `1`
 
 <a id="pyke_pyxel._types.coord.distance_to"></a>
 
@@ -1761,6 +1775,21 @@ Find an `OpenableSprite` adjacent to the player's current position
 class Actor()
 ```
 
+Represents an actor in the game world.
+An actor can be a player, enemy, item, etc. which are present at a position on the game map.
+
+<a id="pyke_pyxel.rpg.actor.Actor.__init__"></a>
+
+#### \_\_init\_\_
+
+```python
+def __init__(sprite: Sprite)
+```
+
+**Arguments**:
+
+- `sprite` _Sprite_ - the sprite that represents this actor
+
 <a id="pyke_pyxel.rpg.actor.Actor.launch_projectile"></a>
 
 #### launch\_projectile
@@ -1786,6 +1815,50 @@ def remove()
 ```
 
 Remove this actor from the game
+
+<a id="pyke_pyxel.rpg.actor.Actor.name"></a>
+
+#### name
+
+```python
+@property
+def name()
+```
+
+Returns the name of this actor
+
+<a id="pyke_pyxel.rpg.actor.Actor.position"></a>
+
+#### position
+
+```python
+@property
+def position()
+```
+
+Returns the position of this actor
+
+<a id="pyke_pyxel.rpg.actor.Actor.sprite"></a>
+
+#### sprite
+
+```python
+@property
+def sprite() -> Sprite
+```
+
+Returns the sprite of this actor
+
+<a id="pyke_pyxel.rpg.actor.Actor.sprite_id"></a>
+
+#### sprite\_id
+
+```python
+@property
+def sprite_id() -> int
+```
+
+Returns the ID of the sprite of this actor
 
 <a id="pyke_pyxel.rpg.actor.MovableActor"></a>
 

@@ -8,8 +8,14 @@ from pyke_pyxel.map import Map
 from ._projectile import Projectile
 
 class Actor:
-
+    """Represents an actor in the game world. 
+    An actor can be a player, enemy, item, etc. which are present at a position on the game map.    
+    """
     def __init__(self, sprite: Sprite):
+        """
+        Args:
+            sprite (Sprite): the sprite that represents this actor
+        """
         self._id: int = 0
         self._sprite = sprite
 
@@ -69,11 +75,23 @@ class Actor:
 
     @property 
     def name(self):
+        """Returns the name of this actor"""
         return self._sprite.name
     
     @property
     def position(self):
+        """Returns the position of this actor"""
         return self._sprite.position
+    
+    @property
+    def sprite(self) -> Sprite:
+        """Returns the sprite of this actor"""
+        return self._sprite
+
+    @property
+    def sprite_id(self) -> int:
+        """Returns the ID of the sprite of this actor"""
+        return self._sprite._id
 
 class MovableActor(Actor):
 
