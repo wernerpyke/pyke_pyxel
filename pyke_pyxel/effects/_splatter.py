@@ -17,8 +17,7 @@ class _SplatterEffect(_Effect):
         frame = self._frame
 
         if frame <= 10:
-            # Centre
-            pyxel.pset(self._x-1, self._y, self._colour)
+            pyxel.pset(self._x-1, self._y, self._colour)    # Centre
             pyxel.pset(self._x-1, self._y+1, self._colour)
             pyxel.pset(self._x, self._y, self._colour)
             pyxel.pset(self._x, self._y+1, self._colour)

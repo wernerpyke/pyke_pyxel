@@ -22,6 +22,8 @@ class CompoundSprite:
         self._width = settings.size.tile * cols
         self._height = settings.size.tile * rows
 
+        self._replace_colour: tuple[int,int]|None = None
+
         self._graphics: list[tuple] = []
 
         self._img: pyxel.Image|None = None
@@ -91,12 +93,29 @@ class CompoundSprite:
         """Draw a triangle to the graphics buffer"""
         self._graphics.append(("tri", x1, y1, x2, y2, x3, y3, colour))
 
+    def replace_colour(self, old_colour: int, new_colour: int):
+        """
+        Replace the specified colour with a new colour when drawing this sprite.
+
+        Args:
+            old_colour (int): The colour to replace.
+            new_colour (int): The new colour.
+        """
+        self._replace_colour = (old_colour, new_colour)
+
+    def reset_colour_replacements(self):
+        """Reset the colour replacement specified in `replace_colour`."""
+        self._replace_colour = None
+
     def _draw(self, settings: GameSettings):
         # PERFORMANCE: use an in-memory pyxel Image to cache the rendered sprite
         # However, if we want to add animation to CompoundSprite does that mean that we need to store an Image per frame?
         if not self._img:
             self._img = self._render_image(settings)
         
+        if self._replace_colour:
+            pyxel.pal(self._replace_colour[0], self._replace_colour[1])
+
         pyxel.blt(x=self.position.x, 
                   y=self.position.y, 
                   img=self._img, 
@@ -123,6 +142,9 @@ class CompoundSprite:
                     pyxel.tri(x1,y1,x2,y2,x3,y3,col)
                 case _:
                     log_error(f"CompoundSprite.draw() invalid graphics type {g[0]}")
+
+        if self._replace_colour:
+            pyxel.pal()
 
     def _render_image(self, settings: GameSettings) -> pyxel.Image:
         total_width = len(self.cols) * settings.size.tile

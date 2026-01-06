@@ -30,21 +30,21 @@ class Sprite:
         self.rows = rows
         self._resource_image_index = resource_image_index
 
-        self._position: coord
-        self._rotation: float|None = None
-
-        self.animations: dict[str, Animation] = { }
-        self.active_frame = self.default_frame
-
-        self._animation: Animation|None = None
-
         tile_size = GameSettings.get().size.tile
         self._width = cols * tile_size
         self._height = rows * tile_size
 
+        self._position: coord
+        self._rotation: float|None = None
         self._scale: float|None = None
 
+        self.active_frame = self.default_frame
+        self.animations: dict[str, Animation] = { }
+        self._animation: Animation|None = None
+
         self._linked_sprites: list[Sprite]|None = None
+
+        self._replace_colour: tuple[int,int]|None = None
 
     def add_animation(self, name: str, animation: Animation):
         """Add an animation to the sprite.
@@ -79,6 +79,10 @@ class Sprite:
     def deactivate_animations(self):
         """Stop any active animation and reset flip state."""
         self._animation = None
+
+    def active_animation_is(self, name: str) -> bool:
+        """Returns True if the named animation is active."""
+        return self._animation is not None and self._animation._name == name
 
     @property
     def is_animating(self) -> bool:
@@ -138,35 +142,38 @@ class Sprite:
         else:
             self._scale = scale
 
+    def replace_colour(self, old_colour: int, new_colour: int):
+        """
+        Replace the specified colour with a new colour when drawing this sprite.
+
+        Args:
+            old_colour (int): The colour to replace.
+            new_colour (int): The new colour.
+        """
+        self._replace_colour = (old_colour, new_colour)
+
+    def reset_colour_replacements(self):
+        """Reset the colour replacement specified in `replace_colour`."""
+        self._replace_colour = None
+
     @property
     def position(self) -> coord:
-        """
-        Returns the current position of the sprite.
-
-        Returns:
-            coord: The coordinate of the sprite's top-left corner.
-        """
+        """Returns the current position of the sprite."""
         return self._position
     
     @property
     def width(self) -> int:
-        """
-        Returns the width of the sprite in pixels.
-        """
+        """Returns the width of the sprite in pixels."""
         return self._width
     
     @property
     def height(self) -> int:
-        """
-        Returns the height of the sprite in pixels.
-        """
+        """Returns the height of the sprite in pixels."""
         return self._height
     
     @property
     def rotation(self) -> float|None:
-        """
-        Returns the rotation of the sprite in degrees.
-        """
+        """Returns the rotation of the sprite in degrees."""
         if anim := self._animation:
             return anim.rotation
         else:
@@ -174,9 +181,7 @@ class Sprite:
         
     @property
     def scale(self) -> float|None:
-        """
-        Returns the scale of the sprite.
-        """
+        """Returns the scale of the sprite."""
         return self._scale
         
     def rotated_position(self) -> coord:
@@ -235,6 +240,9 @@ class Sprite:
             if anim.flip:
                 width *= -1
 
+        if self._replace_colour:
+            pyxel.pal(self._replace_colour[0], self._replace_colour[1])
+
         pyxel.blt(x=position.x,
                 y=position.y,
                 img=self._resource_image_index,
@@ -246,5 +254,8 @@ class Sprite:
                 scale=self.scale,
                 colkey=settings.colours.sprite_transparency)
         
+        if self._replace_colour:
+            pyxel.pal()
+
         # rp = self.rotated_position()
         # pyxel.circ(rp.x, rp.y, 1, 8)
