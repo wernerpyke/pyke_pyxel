@@ -31,13 +31,11 @@ def _random_launch_area() -> area:
 def _random_target() -> coord:
     return random.choice(targets)
 
-def launch_spinner(game: RPGGame):
+def _launch_spinner(game: RPGGame):
     spinner = Spinner()
 
     location = game.map.random_location(_random_launch_area())
     spinner.set_position(location.position) # type: ignore warning
-
-    # spinner.set_position(coord(1,2)
 
     game.room.add_enemy(spinner)
     spinner.move_to(_random_target(), game.map)
@@ -55,18 +53,17 @@ class _enemies:
         
         game.timer.every(10.0, "timer_update_level", game)
 
-        self._launch_timer(game)
+        self._enemy_timer(game)
 
     def update(self, game: RPGGame):
         pass
     
     def _launch_enemy(self, game: RPGGame):
-        print("LAUNCH ENEMY")
+        print(f"LAUNCH ENEMY {self.count}")
         for _ in range(round(self.count)):
-            launch_spinner(game)
+            _launch_spinner(game)
 
     def _update_level(self, game: RPGGame):
-
         self.count += 0.02
 
         if self.min_delay > 1:
@@ -77,9 +74,9 @@ class _enemies:
 
         print(f"UPDATE LEVEL {self.count} {self.min_delay} {self.max_delay}")
 
-        self._launch_timer(game)
+        self._enemy_timer(game)
 
-    def _launch_timer(self, game: RPGGame):
+    def _enemy_timer(self, game: RPGGame):
         delta = self.max_delay - self.min_delay
         delay = self.min_delay + (random.random() * delta)
         game.timer.every(delay , "timer_launch_enemy", game)

@@ -11,12 +11,12 @@ from games.jet.player import PLAYER
 from games.jet.enemies import ENEMIES
 
 def game_started(game: RPGGame):
-    map.add_house(game)
+    house = map.add_house(game)
     map.add_trees(game)
 
     player = game.set_player(sprites.player(), speed_px_per_second=220)
     player.set_position(coord(18, 23))
-    PLAYER.start(game)
+    PLAYER.start(house, game)
 
     ENEMIES.start(game)
 
@@ -37,19 +37,21 @@ def player_blocked(player: Player, value: Sprite|None):
     if sprite := value:
         match sprite.name:
             case "house":
-                PLAYER.game.fx.scale_in_out(sprite, to_scale=1.2, duration=0.1)
+                PLAYER.house_heals()
     else:
         direction = player.active_dir if player.active_dir else player.facing_dir
         PLAYER.game.fx.camera_shake(0.1, direction)
     
     PLAYER.stop_movement()
 
-
 def enemy_stopped(enemy: Enemy):
     # Hit the house
     enemy.move_to(coord(22,22))
 
 def enemy_blocked(enemy: Enemy, value: Sprite|None):
+    if enemy.sprite.active_animation_is("die"):
+        return
+
     def _remove_enemy(sprite_id: int):
         # print(f"REMOVE ENEMY {enemy.name}")
         enemy.remove()
@@ -59,7 +61,9 @@ def enemy_blocked(enemy: Enemy, value: Sprite|None):
     if sprite := value:
         if sprite.name == "house":
             # print("ENEMY KILLS")
-            enemy._sprite.activate_animation("kill", on_animation_end=_remove_enemy)
+            enemy.sprite.activate_animation("kill", on_animation_end=_remove_enemy)
+            PLAYER.house_takes_damage()
+
         else:
             print(f"ENEMY BLOCKED {enemy.name} by {sprite.name}")
     else:

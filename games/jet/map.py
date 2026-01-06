@@ -1,10 +1,11 @@
 import random
-from pyke_pyxel import coord, area
+from pyke_pyxel import coord
+from pyke_pyxel.sprite import Sprite
 from pyke_pyxel.rpg import RPGGame, Player
 
 import sprites
 
-def add_house(game: RPGGame):
+def add_house(game: RPGGame) -> Sprite:
     house = sprites.house()
     
     game.room.add_wall(house, 20, 20)
@@ -12,6 +13,8 @@ def add_house(game: RPGGame):
     game.map.mark_open(coord(21,20))
     game.map.mark_open(coord(22,20))
     game.map.mark_open(coord(23,20))
+
+    return house
 
 def add_trees(game: RPGGame):
     # Top-left

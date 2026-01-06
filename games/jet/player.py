@@ -1,4 +1,4 @@
-from pyke_pyxel import DIRECTION, area, coord
+from pyke_pyxel import DIRECTION, area, COLOURS
 from pyke_pyxel.rpg.enemy import Enemy
 from pyke_pyxel.signals import Signals
 from pyke_pyxel.sprite import Sprite
@@ -17,7 +17,11 @@ class _Player:
         self.active_dir: DIRECTION|None = None
         self.second_dir: DIRECTION|None = None
 
-    def start(self, game: RPGGame):
+        self.house_damage = 0
+        self.can_heal: int = 0
+
+    def start(self, house: Sprite, game: RPGGame):
+        self.house = house
         self.game = game
         self.player = game.player
 
@@ -47,16 +51,61 @@ class _Player:
 
         def _remove_enemy(sprite_id: int):
             for e in to_remove:
-                if e._sprite._id == sprite_id:
-                    print(f"REMOVE ENEMY {e.name}")
+                if e.sprite_id == sprite_id:
                     e.remove()
 
-        enemies = self.game.enemies_at(attack_area) # self.player.position)
+        enemies = self.game.enemies_at(attack_area)
         for e in enemies:
-            print(f"ATTACK {e.name}")
             to_remove.append(e)
-            e._sprite.activate_animation("die", on_animation_end=_remove_enemy)
+            
+            # e.stop_moving()
+            # We specifically do not call e.stop_moving()
+            # so that the splatter does not cover up the "die" animation
+            # is there a better solution?
+            e.sprite.activate_animation("die", on_animation_end=_remove_enemy)
+            self.game.fx.splatter(COLOURS.PINK, e.position)
 
+            self.can_heal += 60 * 4 # 4 seconds
+            self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN)
+            
+
+
+    def house_takes_damage(self):
+        self.house_damage += 1
+        match self.house_damage:
+            case 1:
+                self.house.replace_colour(COLOURS.WHITE, COLOURS.PINK)
+            case 2:
+                self.house.replace_colour(COLOURS.WHITE, COLOURS.RED)
+            case 3:
+                self.house.replace_colour(COLOURS.WHITE, COLOURS.PURPLE)
+            case _:
+                print("DEAD!!")
+        self.game.fx.scale_in_out(self.house, to_scale=1.2, duration=0.1)
+
+    def house_heals(self):
+        if self.can_heal == 0:
+            return
+
+        match self.house_damage:
+            case 0:
+                return
+            case 1:
+                self.house_damage = 0
+                self.house.reset_colour_replacements()
+            case 2:
+                self.house_damage = 1
+                self.house.replace_colour(COLOURS.WHITE, COLOURS.PINK)
+            case 3:
+                self.house_damage = 2
+                self.house.replace_colour(COLOURS.WHITE, COLOURS.RED)
+            case _:
+                self.house_damage = 3
+
+        self.can_heal = 0
+        self.player.sprite.reset_colour_replacements()   
+        self.game.fx.scale_in_out(self.house, to_scale=1.2, duration=0.1)
+        
 
     # Movement
 
@@ -86,16 +135,26 @@ class _Player:
         else:
             self.stop_movement()
 
+        if self.can_heal > 0:
+            self.can_heal -= 1
+        
+        if self.can_heal >= (60 * 3):
+            self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN)
+        elif self.can_heal >= (60 * 2):
+            self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN_MINT)
+        else:
+            self.player.sprite.reset_colour_replacements()
+
     def stop_movement(self):
         self.player.stop_moving()
 
         if trail := self.trail:
-            self.player._sprite.unlink_sprite(trail)
+            self.player.sprite.unlink_sprite(trail)
             Signals.send_remove_sprite(trail)
             self.trail = None
 
         if shockwave := self.shockwave:
-            self.player._sprite.unlink_sprite(shockwave)
+            self.player.sprite.unlink_sprite(shockwave)
             Signals.send_remove_sprite(shockwave)
             self.shockwave = None
 
@@ -112,11 +171,11 @@ class _Player:
         
         trail = sprites.trail(player)
         Signals.send_add_sprite(trail)
-        player._sprite.link_sprite(trail)
+        player.sprite.link_sprite(trail)
 
         shockwave = sprites.shockwave(player)
         Signals.send_add_sprite(shockwave)
-        player._sprite.link_sprite(shockwave)
+        player.sprite.link_sprite(shockwave)
 
         self.trail = trail
         self.shockwave = shockwave
@@ -124,21 +183,5 @@ class _Player:
     @property
     def is_moving(self) -> bool:
         return self.active_dir is not None
-    
-    """
-    def check_input_none(self, *keys: int):
-        # TODO - this may no longer be necessary
-        # Because of the order in which we call check_input()
-        # There is an edge case in which, e.g. UP is released af
-        #
-        one_pressed = False
-        keyboard = self.game.keyboard
-        for key in keys:
-            if keyboard.is_down(key):
-                one_pressed = True
-                break
-        if not one_pressed:
-            self.stop_movement()
-    """
 
 PLAYER = _Player()
