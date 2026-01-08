@@ -71,6 +71,18 @@ Games use `.pyxres` files (Pyxel resource format) containing sprites, tilemaps, 
 - **Timer** (`timer.py`): Schedule signals after delays or at intervals
 - **Animation** (`sprite/_anim.py`): Frame-based sprite animations with looping and callbacks
 
+## Testing
+
+Run tests with pytest:
+
+```bash
+pytest tests/           # Run all tests
+pytest tests/ -v        # Verbose output
+pytest tests/test_coord.py::TestCoordCreation::test_basic_creation  # Single test
+```
+
+Tests cover pure logic components (`coord`, `area`) that don't require Pyxel's graphics context.
+
 ## Code Conventions
 
 - Columns and rows are 1-indexed in `coord` and `area`
