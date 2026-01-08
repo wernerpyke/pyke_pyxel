@@ -1,6 +1,7 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+See @README for project overview.
 
 ## Project Overview
 
@@ -9,23 +10,11 @@ This is a Sprite- and Map-based Python game engine built on top of [Pyxel](https
 - **pyke_pyxel/**: The reusable game engine library
 - **games/**: Example games using the engine (td, rpg, jet, simple)
 
-## Running Games
-
-Each game is run from its own directory:
-
-```bash
-# From the project root with venv activated
-python games/td/main.py      # Tower defense game "Maw: Gate of Hell"
-python games/jet/main.py     # RPG-style game
-python games/rpg/main.py     # Room-based RPG prototype
-python games/simple/main.py  # Hello world example
-```
-
 ## Dependencies
 
 Install with: `pip install -r requirements.txt`
 
-Key dependencies: pyxel, blinker (signals), pathfinding
+Key dependencies: pyxel, blinker (signals), pathfinding, pytest
 
 ## Architecture
 
@@ -40,6 +29,8 @@ Key dependencies: pyxel, blinker (signals), pathfinding
 - **Map** (`map.py`): Spatial grid with blocked/free/open/closed status per tile. Supports A* pathfinding.
 
 ### Game Lifecycle
+
+See @docs/README.md for a guide on how to build games with the game engine.
 
 1. Create `GameSettings` and configure (window size, FPS, colours, mouse)
 2. Instantiate `Game` or `RPGGame` with settings, title, and `.pyxres` resource path

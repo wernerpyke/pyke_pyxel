@@ -218,11 +218,14 @@
     * [add\_animation](#pyke_pyxel.sprite._sprite.Sprite.add_animation)
     * [activate\_animation](#pyke_pyxel.sprite._sprite.Sprite.activate_animation)
     * [deactivate\_animations](#pyke_pyxel.sprite._sprite.Sprite.deactivate_animations)
+    * [active\_animation\_is](#pyke_pyxel.sprite._sprite.Sprite.active_animation_is)
     * [link\_sprite](#pyke_pyxel.sprite._sprite.Sprite.link_sprite)
     * [unlink\_sprite](#pyke_pyxel.sprite._sprite.Sprite.unlink_sprite)
     * [set\_position](#pyke_pyxel.sprite._sprite.Sprite.set_position)
     * [set\_rotation](#pyke_pyxel.sprite._sprite.Sprite.set_rotation)
     * [set\_scale](#pyke_pyxel.sprite._sprite.Sprite.set_scale)
+    * [replace\_colour](#pyke_pyxel.sprite._sprite.Sprite.replace_colour)
+    * [reset\_colour\_replacements](#pyke_pyxel.sprite._sprite.Sprite.reset_colour_replacements)
     * [position](#pyke_pyxel.sprite._sprite.Sprite.position)
     * [width](#pyke_pyxel.sprite._sprite.Sprite.width)
     * [height](#pyke_pyxel.sprite._sprite.Sprite.height)
@@ -237,6 +240,8 @@
     * [clear\_graphics](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.clear_graphics)
     * [graph\_rect](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.graph_rect)
     * [graph\_triangle](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.graph_triangle)
+    * [replace\_colour](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.replace_colour)
+    * [reset\_colour\_replacements](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.reset_colour_replacements)
     * [set\_position](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.set_position)
     * [position](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.position)
     * [width](#pyke_pyxel.sprite._compound_sprite.CompoundSprite.width)
@@ -2935,6 +2940,16 @@ def deactivate_animations()
 
 Stop any active animation and reset flip state.
 
+<a id="pyke_pyxel.sprite._sprite.Sprite.active_animation_is"></a>
+
+#### active\_animation\_is
+
+```python
+def active_animation_is(name: str) -> bool
+```
+
+Returns True if the named animation is active.
+
 <a id="pyke_pyxel.sprite._sprite.Sprite.link_sprite"></a>
 
 #### link\_sprite
@@ -2998,6 +3013,31 @@ def set_scale(scale: float)
 
 Sets the scale of the sprite.
 
+<a id="pyke_pyxel.sprite._sprite.Sprite.replace_colour"></a>
+
+#### replace\_colour
+
+```python
+def replace_colour(old_colour: int, new_colour: int)
+```
+
+Replace the specified colour with a new colour when drawing this sprite.
+
+**Arguments**:
+
+- `old_colour` _int_ - The colour to replace.
+- `new_colour` _int_ - The new colour.
+
+<a id="pyke_pyxel.sprite._sprite.Sprite.reset_colour_replacements"></a>
+
+#### reset\_colour\_replacements
+
+```python
+def reset_colour_replacements()
+```
+
+Reset the colour replacement specified in `replace_colour`.
+
 <a id="pyke_pyxel.sprite._sprite.Sprite.position"></a>
 
 #### position
@@ -3008,10 +3048,6 @@ def position() -> coord
 ```
 
 Returns the current position of the sprite.
-
-**Returns**:
-
-- `coord` - The coordinate of the sprite's top-left corner.
 
 <a id="pyke_pyxel.sprite._sprite.Sprite.width"></a>
 
@@ -3146,6 +3182,31 @@ def graph_triangle(x1: int, y1: int, x2: int, y2: int, x3: int, y3: int, colour:
 ```
 
 Draw a triangle to the graphics buffer
+
+<a id="pyke_pyxel.sprite._compound_sprite.CompoundSprite.replace_colour"></a>
+
+#### replace\_colour
+
+```python
+def replace_colour(old_colour: int, new_colour: int)
+```
+
+Replace the specified colour with a new colour when drawing this sprite.
+
+**Arguments**:
+
+- `old_colour` _int_ - The colour to replace.
+- `new_colour` _int_ - The new colour.
+
+<a id="pyke_pyxel.sprite._compound_sprite.CompoundSprite.reset_colour_replacements"></a>
+
+#### reset\_colour\_replacements
+
+```python
+def reset_colour_replacements()
+```
+
+Reset the colour replacement specified in `replace_colour`.
 
 <a id="pyke_pyxel.sprite._compound_sprite.CompoundSprite.set_position"></a>
 

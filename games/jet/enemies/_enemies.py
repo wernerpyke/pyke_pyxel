@@ -54,9 +54,6 @@ class _enemies:
         game.timer.every(10.0, "timer_update_level", game)
 
         self._enemy_timer(game)
-
-    def update(self, game: RPGGame):
-        pass
     
     def _launch_enemy(self, game: RPGGame):
         print(f"LAUNCH ENEMY {self.count}")

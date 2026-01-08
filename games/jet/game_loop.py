@@ -26,18 +26,16 @@ def game_update(game: RPGGame):
     PLAYER.check_input(pyxel.KEY_LEFT, DIRECTION.LEFT)
     PLAYER.check_input(pyxel.KEY_RIGHT, DIRECTION.RIGHT)
 
-    PLAYER.update_movement()
-
-    ENEMIES.update(game)
+    PLAYER.update()
 
 def player_moved(player: Player):
     PLAYER.check_enemies_to_attack()
 
 def player_blocked(player: Player, value: Sprite|None):
     if sprite := value:
-        match sprite.name:
-            case "house":
-                PLAYER.house_heals()
+        if sprite.name == "house":
+            PLAYER.heal_house()
+                
     else:
         direction = player.active_dir if player.active_dir else player.facing_dir
         PLAYER.game.fx.camera_shake(0.1, direction)
@@ -50,6 +48,8 @@ def enemy_stopped(enemy: Enemy):
 
 def enemy_blocked(enemy: Enemy, value: Sprite|None):
     if enemy.sprite.active_animation_is("die"):
+        # The enemy touched the house once it was already killed
+        # This happens because we don't call enemy.stop_moving() when we activate the "die" animation
         return
 
     def _remove_enemy(sprite_id: int):
@@ -62,18 +62,8 @@ def enemy_blocked(enemy: Enemy, value: Sprite|None):
         if sprite.name == "house":
             # print("ENEMY KILLS")
             enemy.sprite.activate_animation("kill", on_animation_end=_remove_enemy)
-            PLAYER.house_takes_damage()
-
+            PLAYER.damage_house()
         else:
             print(f"ENEMY BLOCKED {enemy.name} by {sprite.name}")
     else:
         print(f"ENEMY BLOCKED {enemy.name}")
-
-
-
-
-
-
-
-
-

@@ -18,7 +18,7 @@ class _Player:
         self.second_dir: DIRECTION|None = None
 
         self.house_damage = 0
-        self.can_heal: int = 0
+        self.can_heal = 0
 
     def start(self, house: Sprite, game: RPGGame):
         self.house = house
@@ -65,12 +65,12 @@ class _Player:
             e.sprite.activate_animation("die", on_animation_end=_remove_enemy)
             self.game.fx.splatter(COLOURS.PINK, e.position)
 
-            self.can_heal += 60 * 4 # 4 seconds
+            self.can_heal = 60 * 2 # 2 seconds
             self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN)
             
 
 
-    def house_takes_damage(self):
+    def damage_house(self):
         self.house_damage += 1
         match self.house_damage:
             case 1:
@@ -83,7 +83,7 @@ class _Player:
                 print("DEAD!!")
         self.game.fx.scale_in_out(self.house, to_scale=1.2, duration=0.1)
 
-    def house_heals(self):
+    def heal_house(self):
         if self.can_heal == 0:
             return
 
@@ -103,9 +103,24 @@ class _Player:
                 self.house_damage = 3
 
         self.can_heal = 0
-        self.player.sprite.reset_colour_replacements()   
         self.game.fx.scale_in_out(self.house, to_scale=1.2, duration=0.1)
         
+    def update(self):
+        player = self.player
+        sprite = player.sprite
+
+        # Movement
+        if self.active_dir:
+            if not player.active_dir == self.active_dir:
+                self._start_movement()
+        else:
+            self.stop_movement()
+
+        # Heal counter
+        if self.can_heal > 0:
+            self.can_heal -= 1
+        else:
+            sprite.reset_colour_replacements()
 
     # Movement
 
@@ -126,24 +141,6 @@ class _Player:
             if keyboard.was_pressed(key):
                 # print(f"PRESSED {direction}")
                 self.active_dir = direction
-
-    def update_movement(self):
-        player = self.player
-        if self.active_dir:
-            if not player.active_dir == self.active_dir:
-                self._start_movement()
-        else:
-            self.stop_movement()
-
-        if self.can_heal > 0:
-            self.can_heal -= 1
-        
-        if self.can_heal >= (60 * 3):
-            self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN)
-        elif self.can_heal >= (60 * 2):
-            self.player.sprite.replace_colour(COLOURS.WHITE, COLOURS.GREEN_MINT)
-        else:
-            self.player.sprite.reset_colour_replacements()
 
     def stop_movement(self):
         self.player.stop_moving()
