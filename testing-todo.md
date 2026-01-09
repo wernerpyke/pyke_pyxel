@@ -6,14 +6,20 @@
 |--------|-------|
 | Total Python modules | 40 |
 | Total classes | ~45 |
-| Classes with tests | 3 |
-| Test coverage (by class) | ~7% |
-| Test files | 3 (test_coord.py, test_area.py, test_timer.py) |
+| Classes with tests | 11 |
+| Test coverage (by class) | ~24% |
+| Test files | 9 (test_coord.py, test_area.py, test_timer.py, test_path_grid.py, test_math.py, test_rpg_sprites.py, test_map.py, test_animation.py, test_sprite.py) |
 
 ### Currently Tested
 - `coord` - Comprehensive tests (50+ test cases)
 - `area` - Comprehensive tests (22+ test cases)
 - `Timer` - Good coverage (21 test cases)
+- `_PathGrid` - Good coverage (22 test cases)
+- `WeightedChoice` / `RandomChoice` - Good coverage (20 test cases)
+- `OpenableSprite` / `MovableSprite` - Good coverage (25 test cases)
+- `Map` - Comprehensive tests (67 test cases)
+- `Animation` / `AnimationFactory` - Good coverage (39 test cases)
+- `Sprite` - Comprehensive tests (50 test cases)
 
 ### Test Infrastructure
 - pytest framework with fixtures in `conftest.py`
@@ -57,8 +63,8 @@ Classes are ranked based on:
 
 ### Priority 1 - Critical (Pure Logic, High Complexity)
 
-#### 1.1 Map (`map.py`)
-- [ ] Test `Map` class
+#### 1.1 Map (`map.py`) ✓ COMPLETE
+- [x] Test `Map` class (test_map.py)
 - **Complexity**: High (35+ methods, ~350 LOC)
 - **Criticality**: Core - manages all spatial game state
 - **Usage**: Every game uses Map via `game.map`
@@ -80,8 +86,8 @@ Classes are ranked based on:
 
 ---
 
-#### 1.2 _PathGrid (`_path_grid.py`)
-- [ ] Test `_PathGrid` class
+#### 1.2 _PathGrid (`_path_grid.py`) ✓ COMPLETE
+- [x] Test `_PathGrid` class (test_path_grid.py)
 - **Complexity**: Medium (6 methods, ~115 LOC)
 - **Criticality**: Core - A* pathfinding algorithm
 - **Usage**: Used by Map for all pathfinding
@@ -103,9 +109,9 @@ Classes are ranked based on:
 
 ---
 
-#### 1.3 Animation (`sprite/_anim.py`)
-- [ ] Test `Animation` class
-- [ ] Test `AnimationFactory` class
+#### 1.3 Animation (`sprite/_anim.py`) ✓ COMPLETE
+- [x] Test `Animation` class (test_animation.py)
+- [x] Test `AnimationFactory` class (test_animation.py)
 - **Complexity**: Medium (10 methods, ~120 LOC)
 - **Criticality**: Core - drives all sprite animations
 - **Usage**: Every animated sprite uses Animation
@@ -127,8 +133,8 @@ Classes are ranked based on:
 
 ---
 
-#### 1.4 Sprite (`sprite/_sprite.py`)
-- [ ] Test `Sprite` class
+#### 1.4 Sprite (`sprite/_sprite.py`) ✓ COMPLETE
+- [x] Test `Sprite` class (test_sprite.py)
 - **Complexity**: High (25+ methods, ~260 LOC)
 - **Criticality**: Core - base for all game entities
 - **Usage**: Used by every game, HUD, effects
@@ -202,9 +208,9 @@ Classes are ranked based on:
 
 ---
 
-#### 2.3 WeightedChoice & RandomChoice (`math.py`)
-- [ ] Test `RandomChoice` class
-- [ ] Test `WeightedChoice` class
+#### 2.3 WeightedChoice & RandomChoice (`math.py`) ✓ COMPLETE
+- [x] Test `RandomChoice` class (test_math.py)
+- [x] Test `WeightedChoice` class (test_math.py)
 - **Complexity**: Low (6 methods, ~75 LOC)
 - **Criticality**: Supporting - game randomness
 - **Usage**: Spawning, loot, procedural content
@@ -224,9 +230,9 @@ Classes are ranked based on:
 
 ---
 
-#### 2.4 OpenableSprite (`sprite/_rpg_sprites.py`)
-- [ ] Test `OpenableSprite` class
-- [ ] Test `MovableSprite` class
+#### 2.4 OpenableSprite (`sprite/_rpg_sprites.py`) ✓ COMPLETE
+- [x] Test `OpenableSprite` class (test_rpg_sprites.py)
+- [x] Test `MovableSprite` class (test_rpg_sprites.py)
 - **Complexity**: Low (10 methods, ~90 LOC)
 - **Criticality**: Supporting - doors, chests
 - **Usage**: RPG games for interactive objects
@@ -387,15 +393,15 @@ Classes are ranked based on:
 
 ## Recommended Testing Order
 
-### Phase 1: Quick Wins (1-2 days)
-1. [ ] `_PathGrid` - Critical pathfinding logic
-2. [ ] `WeightedChoice` / `RandomChoice` - Simple, high value
-3. [ ] `OpenableSprite` / `MovableSprite` - Simple state machines
+### Phase 1: Quick Wins (1-2 days) ✓ COMPLETE
+1. [x] `_PathGrid` - Critical pathfinding logic (test_path_grid.py)
+2. [x] `WeightedChoice` / `RandomChoice` - Simple, high value (test_math.py)
+3. [x] `OpenableSprite` / `MovableSprite` - Simple state machines (test_rpg_sprites.py)
 
-### Phase 2: Core Logic (3-5 days)
-4. [ ] `Map` - Comprehensive spatial testing
-5. [ ] `Animation` - Frame and callback logic
-6. [ ] `Sprite` - Position, rotation, linking
+### Phase 2: Core Logic (3-5 days) ✓ COMPLETE
+4. [x] `Map` - Comprehensive spatial testing (test_map.py)
+5. [x] `Animation` - Frame and callback logic (test_animation.py)
+6. [x] `Sprite` - Position, rotation, linking (test_sprite.py)
 
 ### Phase 3: Movement & RPG (2-3 days)
 7. [ ] `Actor` / `MovableActor` - Movement system
@@ -456,7 +462,8 @@ def test_sprite_draw(mock_pyxel):
 - `coord`, `area` - Already tested
 - `Timer` - Already tested
 - `_PathGrid` - Already tested
-- - `WeightedChoice`, `RandomChoice` - Already tested
-- `Map`, `Animation` - Pure logic
-- `OpenableSprite` state methods
+- `WeightedChoice`, `RandomChoice` - Already tested
+- `OpenableSprite`, `MovableSprite` - Already tested
+- `Map`, `Animation`, `AnimationFactory` - Already tested (Phase 2)
+- `Sprite` - Already tested (Phase 2)
 - `HUD` collection methods
