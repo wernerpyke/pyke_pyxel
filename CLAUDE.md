@@ -1,7 +1,6 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-See @README for project overview.
 
 ## Project Overview
 
@@ -30,7 +29,7 @@ Key dependencies: pyxel, blinker (signals), pathfinding, pytest
 
 ### Game Lifecycle
 
-See @docs/README.md for a guide on how to build games with the game engine.
+Only when asked to build or enhance games then see @docs/README.md for a guide on how to use the game engine. When asked to work on the engine in `pyke_pyxel` or to add or update tests do not load this file.
 
 1. Create `GameSettings` and configure (window size, FPS, colours, mouse)
 2. Instantiate `Game` or `RPGGame` with settings, title, and `.pyxres` resource path
@@ -62,21 +61,48 @@ Games use `.pyxres` files (Pyxel resource format) containing sprites, tilemaps, 
 - **Timer** (`timer.py`): Schedule signals after delays or at intervals
 - **Animation** (`sprite/_anim.py`): Frame-based sprite animations with looping and callbacks
 
-## Testing
-
-Run tests with pytest:
-
-```bash
-pytest tests/           # Run all tests
-pytest tests/ -v        # Verbose output
-pytest tests/test_coord.py::TestCoordCreation::test_basic_creation  # Single test
-```
-
-Tests cover pure logic components (`coord`, `area`) that don't require Pyxel's graphics context.
-
 ## Code Conventions
 
+### 1. Python
+
+-   **PEP 8**: Follow the PEP 8 style guide for all Python code.
+-   **Naming Conventions**:
+    -   `PascalCase` for class names (e.g., `Player`, `SpriteManager`).
+    -   `snake_case` for functions, methods, variables, and file names (e.g., `update_player`, `game_loop.py`).
+    -   Internal method names are prefixed with `_` (e.g., `_update()`, `_draw()`)
+-   **Typing**: Use Python type hints for all new function and method signatures. Analyze existing code for the proper types to use.
+-   **Docstrings**: Add Google-style docstrings to all new public modules, classes, and functions to explain their purpose, arguments, and return values. This is critical as documentation is generated from them.
+
+### 2. Imports
+
+- Organize imports in the standard order:
+    1.  Standard library imports (e.g., `os`, `sys`).
+    2.  Third-party library imports (e.g., `pyxel`).
+    3.  Local application/library imports (e.g., `from pyke_pyxel import draw`).
+
+### 3. Specific Instructions for AI
+
+**Refactoring:** When asked to refactor code, prioritize **readability** over extreme micro-optimizations.
+
+### 4. Common Tasks
+
+When asked to perform a task, use the following commands and workflows.
+
+### Testing
+
+The tests in the `tests/` folder are implemented using `pytest`.
+
+Run tests with the `./scripts/run-tests.sh`.
+
+### Adding and Updating Documentation
+
+The documentation in `docs/` is generated from source code docstrings using `pydoc-markdown`.
+
+Add Google-style docstrings to all new public modules, classes, and functions to explain their purpose, arguments, and return values. This is critical as API documentation is generated from them.
+
+To generate updated API documentation run the script `./scripts/update-docs.sh`.
+
+### 5. Game Engine
 - Columns and rows are 1-indexed in `coord` and `area`
 - Pixel coordinates use `x`/`y`; grid positions use `col`/`row`
-- Internal methods prefixed with `_` (e.g., `_update()`, `_draw()`)
 - Sprites are added to Game via `game.add_sprite()` or `Signals.send_add_sprite()`
