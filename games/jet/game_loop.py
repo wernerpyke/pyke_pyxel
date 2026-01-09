@@ -47,11 +47,6 @@ def enemy_stopped(enemy: Enemy):
     enemy.move_to(coord(22,22))
 
 def enemy_blocked(enemy: Enemy, value: Sprite|None):
-    if enemy.sprite.active_animation_is("die"):
-        # The enemy touched the house once it was already killed
-        # This happens because we don't call enemy.stop_moving() when we activate the "die" animation
-        return
-
     def _remove_enemy(sprite_id: int):
         # print(f"REMOVE ENEMY {enemy.name}")
         enemy.remove()

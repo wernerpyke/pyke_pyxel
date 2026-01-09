@@ -109,7 +109,9 @@ class MovableActor(Actor):
         self._move_path: list[coord]|None = None
         self._blocked_by: coord|None = None
 
+        # The direction in which the sprite is moving
         self.active_dir: DIRECTION|None = None
+        # Retains the direction in which the sprite _was_ moving
         self.facing_dir: DIRECTION = DIRECTION.DOWN
 
     def set_position(self, position: coord):
@@ -121,16 +123,16 @@ class MovableActor(Actor):
         if (self.active_dir == direction) and self._sprite.is_animating:
             return
 
-        self._sprite.activate_animation(direction.value)
         self.active_dir = direction
-        self.facing_dir = direction
-
+        self._animate_direction(direction)
         self._px_counter = 0
 
     def stop_moving(self):
         """Stop moving"""
-        self._sprite.deactivate_animations()
+        
+        self._animate_direction(None)
         self.active_dir = None
+
         self._move_to = None
         self._move_path = None
         self._blocked_by = None
@@ -200,8 +202,18 @@ class MovableActor(Actor):
             next_pos = self._next_destination_pos(distance)
         
         if not next_pos:
+            # TODO - should we call self.stop_moving() here?
             return False
         
+        if next_pos.is_above(self.position):
+            self._animate_direction(DIRECTION.UP)
+        elif next_pos.is_below(self.position):
+            self._animate_direction(DIRECTION.DOWN)
+        elif next_pos.is_left_of(self.position):
+            self._animate_direction(DIRECTION.LEFT)
+        elif next_pos.is_right_of(self.position):
+            self._animate_direction(DIRECTION.RIGHT)
+
         # Special condition - if we are moving along a path then we don't check for collissions
         # The problem with checking collissions on a path is it breaks sprite.position.clone_towards() 
         # since the path allows corner-hopping
@@ -215,6 +227,21 @@ class MovableActor(Actor):
             # print(f"BLOCKED {next_pos}")
             self._blocked_by = next_pos
             return False
+
+    def _animate_direction(self, direction: DIRECTION|None):
+        current_dir = self.active_dir
+        
+        sprite = self.sprite
+        if direction:
+            sprite.activate_animation(direction.value)
+            self.facing_dir = direction
+        else:
+            if isinstance(sprite, MovableSprite):
+                sprite.deactivate_movement_animation()
+            if current_dir:
+                self.facing_dir = current_dir
+            else:
+                self.facing_dir = DIRECTION.DOWN
 
     def _next_destination_pos(self, distance: int) -> coord|None:
         move_to = self._move_to

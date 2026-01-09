@@ -11,5 +11,3 @@ class Spinner(Enemy):
         sprite = sprites.spinner()
 
         super().__init__(sprite, speed_px_per_second=50)
-
-        sprite.activate_animation("up")

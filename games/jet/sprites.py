@@ -72,11 +72,13 @@ def house() -> Sprite:
 def spinner() -> MovableSprite:
     sprite = MovableSprite("spinner", coord(6,1))
     
-    anim = Animation(coord(6, 1), 4)
-    sprite.set_up_animation(anim)
-    sprite.set_down_animation(anim)
-    sprite.set_left_animation(anim)
-    sprite.set_right_animation(anim)
+    anim = AnimationFactory(frames=4)
+
+    # anim = Animation(coord(6, 1), 4)
+    sprite.set_up_animation(anim.at(coord(6,1)))
+    sprite.set_down_animation(anim.at(coord(6,1)))
+    sprite.set_left_animation(anim.at(coord(6,1)))
+    sprite.set_right_animation(anim.at(coord(6,1)))
 
     # See nasty bug in Animation._update_frame()
     sprite.add_animation("die", Animation(coord(6,2), 2, loop=False))

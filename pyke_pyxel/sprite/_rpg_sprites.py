@@ -1,5 +1,5 @@
 from typing import Optional
-from pyke_pyxel import coord
+from pyke_pyxel import coord, DIRECTION
 from ._sprite import Sprite
 from ._anim import Animation
 
@@ -75,16 +75,25 @@ class MovableSprite(Sprite):
 
     def set_up_animation(self, animation: Animation):
         """Set the animation to be used when the sprite moves UP"""
-        self.add_animation("up", animation)
+        self.add_animation(DIRECTION.UP.value, animation)
 
     def set_down_animation(self, animation: Animation):
         """Set the animation to be used when the sprite moves DOWN"""
-        self.add_animation("down", animation)
+        self.add_animation(DIRECTION.DOWN.value, animation)
 
     def set_left_animation(self, animation: Animation):
         """Set the animation to be used when the sprite moves LEFT"""
-        self.add_animation("left", animation)
+        self.add_animation(DIRECTION.LEFT.value, animation)
 
     def set_right_animation(self, animation: Animation):
         """Set the animation to be used when the sprite moves RIGHT"""
-        self.add_animation("right", animation)
+        self.add_animation(DIRECTION.RIGHT.value, animation)
+
+    def deactivate_movement_animation(self):
+        if (
+                self.active_animation_is(DIRECTION.UP.value) or 
+                self.active_animation_is(DIRECTION.DOWN.value) or
+                self.active_animation_is(DIRECTION.LEFT.value) or
+                self.active_animation_is(DIRECTION.RIGHT.value) 
+            ):
+                self.deactivate_animations()

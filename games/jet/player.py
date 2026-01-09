@@ -58,10 +58,7 @@ class _Player:
         for e in enemies:
             to_remove.append(e)
             
-            # e.stop_moving()
-            # We specifically do not call e.stop_moving()
-            # so that the splatter does not cover up the "die" animation
-            # is there a better solution?
+            e.stop_moving()
             e.sprite.activate_animation("die", on_animation_end=_remove_enemy)
             self.game.fx.splatter(COLOURS.PINK, e.position)
 

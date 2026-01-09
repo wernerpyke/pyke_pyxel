@@ -60,13 +60,13 @@ class Room:
         Signals.send_add_sprite(sprite)
         self._map.mark_openable(position, sprite, closed)
 
-    def add_enemy(self, sprite: Enemy|MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int = 0) -> Enemy:
+    def add_enemy(self, sprite: Enemy|MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int = 8) -> Enemy:
         """
         Add an enemy to the map.
 
         Args:
             sprite (Enemy | MovableSprite | Callable[[], MovableSprite]): The sprite (or a callable that returns a sprite) representing the enemy.
-            speed_px_per_second (int): The speed of the enemy's movements expressed as pixels per second
+            speed_px_per_second (int): The speed of the enemy's movements expressed as pixels per second, defaults to 8
 
         Returns:
             Enemy: The initialized `Enemy` instance.
@@ -84,18 +84,17 @@ class Room:
 
         return enemy
     
-    def add_movable_actor(self, sprite:MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int = 0) -> MovableActor:
+    def add_movable_actor(self, sprite:MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int = 8) -> MovableActor:
         """
         Add a movable actor to the map.
 
         Args:
             sprite (MovableSprite | Callable[[], MovableSprite]): The sprite (or a callable that returns a sprite) representing the actor.
-            speed_px_per_second (int): The speed of the actor's movements expressed as pixels per second
+            speed_px_per_second (int): The speed of the actor's movements expressed as pixels per second, defaults to 8.
 
         Returns:
             MovableActor: The initialized `MovableActor` instance.
         """
-        
         if isinstance(sprite, Callable):
             sprite = sprite()
         actor = MovableActor(sprite, speed_px_per_second)
