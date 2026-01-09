@@ -3,6 +3,7 @@ from pyke_pyxel import coord
 from pyke_pyxel.map import Map
 from pyke_pyxel.sprite import Sprite, OpenableSprite, MovableSprite
 from pyke_pyxel.signals import Signals
+from .actor import Actor, MovableActor
 from .enemy import Enemy
 
 from . import _signals
@@ -82,3 +83,44 @@ class Room:
         _signals._enemy_added(enemy)
 
         return enemy
+    
+    def add_movable_actor(self, sprite:MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int = 0) -> MovableActor:
+        """
+        Add a movable actor to the map.
+
+        Args:
+            sprite (MovableSprite | Callable[[], MovableSprite]): The sprite (or a callable that returns a sprite) representing the actor.
+            speed_px_per_second (int): The speed of the actor's movements expressed as pixels per second
+
+        Returns:
+            MovableActor: The initialized `MovableActor` instance.
+        """
+        
+        if isinstance(sprite, Callable):
+            sprite = sprite()
+        actor = MovableActor(sprite, speed_px_per_second)
+        Signals.send_add_sprite(sprite)
+
+        _signals._actor_added(actor)
+
+        return actor
+    
+    def add_actor(self, sprite:Sprite|Callable[[], Sprite]) -> Actor:
+        """
+        Add an actor to the map.
+
+        Args:
+            sprite (Sprite | Callable[[], Sprite]): The sprite (or a callable that returns a sprite) representing the actor.
+
+        Returns:
+            Actor: The initialized `Actor` instance.
+        """
+        
+        if isinstance(sprite, Callable):
+            sprite = sprite()
+        actor = Actor(sprite)
+        Signals.send_add_sprite(sprite)
+
+        _signals._actor_added(actor)
+
+        return actor

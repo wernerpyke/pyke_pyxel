@@ -35,6 +35,9 @@ class RPGGame(Game):
         self._actors: list[Actor] = []
         Signals.connect("enemy_added", self.add_actor)
         Signals.connect("enemy_removed", self.remove_actor)
+        Signals.connect("actor_added", self.add_actor)
+        Signals.connect("actor_removed", self.remove_actor)
+
 
     def set_player(self, sprite: MovableSprite|Callable[[], MovableSprite], speed_px_per_second: int) -> Player:
         """
