@@ -4,6 +4,10 @@ github/
 __pycache__/
 *.py[cod]
 *.pyo
+.pytest_cache/
+
+# Claude Code
+.claude/
 
 # Virtual environments
 .venv/
@@ -21,3 +25,4 @@ Thumbs.db
 # Build artifacts
 build/
 dist/
+*.egg-info/
