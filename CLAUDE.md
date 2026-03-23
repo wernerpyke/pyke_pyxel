@@ -11,7 +11,7 @@ This is a Sprite- and Map-based Python game engine built on top of [Pyxel](https
 
 ## Dependencies
 
-Install with: `pip install -r requirements.txt`
+Install with: `uv sync --extra dev`
 
 Key dependencies: pyxel, blinker (signals), pathfinding, pytest
 

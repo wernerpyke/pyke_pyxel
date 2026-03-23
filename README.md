@@ -32,6 +32,16 @@ A simple Sprite- and Map-based Python game engine on top of [Pyxel](https://gith
 
 ---
 
+## 🔧 Setup
+
+```
+uv sync --extra dev
+```
+
+Scripts (`run-tests.sh`, `run-td.sh`, `run-rpg.sh`, `update-docs.sh`) use `uv run` — no manual venv activation needed.
+
+---
+
 ## 🔧 Tools
 
 - **Python 3.x** - not bad once you get used to it but singletons are messy
@@ -39,5 +49,5 @@ A simple Sprite- and Map-based Python game engine on top of [Pyxel](https://gith
 - **[Aseprite](https://www.aseprite.org/)** — a wonderful pixel art sprite editor
 - **[Blinker](https://github.com/pallets-eco/blinker)** - a fast Python in-process signal/event dispatching system
 - **[pydocs-markdown](https://niklasrosenstein.github.io/pydoc-markdown/)** - for docstrings documentation
-- **ChatGPT Python by Nicholas Barker** - to teach me Python and it's tooling in VSCode
+- **[pytest](https://pytest.org/)** - automated testing
 - VSCode for development
