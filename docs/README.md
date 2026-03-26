@@ -17,6 +17,8 @@ register a title screen, gameplay screen and a pause/menu screen.
 The `Game` object owns the Pyxel window and drives the tick/update loop; it will call your current screen's update and draw methods each frame. Treat `Game` as the single source of truth for game-wide
 resources (loaded assets, global settings and top-level managers).
 
+The engine ships three game types — `Game`, `RPGGame`, and `CellAutoGame` — each building on the last. See [GAME-TYPES.md](GAME-TYPES.md) for the full comparison and per-type API.
+
 The `Game` object is configured via a `GameSettings` instance.
 
 For example:
@@ -285,6 +287,8 @@ UI-related classes are provided in `Image`, `Button` and `Rect`.
 - `Image` draws an image from a resouce image sheet
 - `Button` uses `Image` instances to represent `up` and `down` states and offers support for icon and text overlays.
 - `Rect` provides the ability to draw rectangles with/without borders.
+
+See [DRAWABLES.md](DRAWABLES.md) for the full drawable class hierarchy, per-class API, and TileMap background rendering.
 
 Keep HUD code
 separate from game logic: write small presenter functions that turn internal

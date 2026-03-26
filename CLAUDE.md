@@ -23,8 +23,8 @@ The engine is signal-driven: games wire logic through `Signals` (pub/sub) rather
 
 - See `docs/README.md` for usage guide, lifecycle, and code examples (load with `@docs/README.md` when building or enhancing games).
 - See `docs/pyke_pyxel_API.md` for auto-generated API reference.
-- See `docs/ROADMAP-TESTING.md` for test coverage status and priorities.
-- See `docs/ROADMAP-DOCS.md` for documentation gaps and priorities.
+- See `docs/TESTING.md` for test coverage status and priorities.
+- See `docs/ROADMAP.md` for roadmap items and status
 
 ## Code Conventions
 
@@ -64,7 +64,7 @@ The tests in the `tests/` folder are implemented using `pytest`.
 
 Run tests with `./scripts/run-tests.sh`. To run a specific file: `./scripts/run-tests.sh tests/test_coord.py`.
 
-Test coverage is ~24% by class. Core primitives (`coord`, `area`, `Map`, `Sprite`, `Animation`, `Timer`) have good coverage; UI, drawing, and effects modules do not. See `docs/ROADMAP-TESTING.md` for details.
+Test coverage is ~24% by class. Core primitives (`coord`, `area`, `Map`, `Sprite`, `Animation`, `Timer`) have good coverage; UI, drawing, and effects modules do not. See `docs/TESTING.md` for details.
 
 #### Adding and Updating Documentation
 
@@ -73,7 +73,7 @@ The `docs/` directory is organised as follows:
 - **`docs/README.md`** — Human-first how-to guide for building games with the engine. Keep it readable and example-driven; it should be useful to Claude but written for humans first.
 - **`docs/pyke_pyxel_API.md`** — Auto-generated API reference from source code docstrings. Regenerate with `./scripts/update-docs.sh`.
 - **Stand-alone topic docs** — Additional architectural areas (e.g. drawable, cell_auto) should be documented in their own markdown files in `docs/` and linked from `docs/README.md`.
-- **`docs/ROADMAP-*.md`** — Roadmap and tracking files (e.g. `ROADMAP-TESTING.md`, `ROADMAP-DOCS.md`).
+- **`docs/ROADMAP.md`** — Roadmap items and status tracking.
 
 #### Profiling
 
