@@ -9,6 +9,8 @@ This is a Sprite- and Map-based Python game engine built on top of [Pyxel](https
 - **pyke_pyxel/**: The reusable game engine library
 - **games/**: Example games using the engine (td, rpg, jet, simple)
 
+**Status:** v0.1.0, active development, no CI/CD.
+
 ## Dependencies
 
 Install with: `uv sync --extra dev`
@@ -17,53 +19,16 @@ Key dependencies: pyxel, blinker (signals), pathfinding, pytest
 
 ## Architecture
 
-### Core Classes (pyke_pyxel/)
+The engine is signal-driven: games wire logic through `Signals` (pub/sub) rather than inheritance. The core primitives are `Game`, `coord`, `area`, `Map`, `Sprite`, and `Signals`.
 
-- **Game** (`game.py`): Main game loop controller. Manages sprites, tilemaps, HUD, FX, and the update/draw cycle. Configured via `GameSettings`.
-- **RPGGame** (`rpg/game.py`): Extends Game with room-based RPG mechanics, player/enemy actors, and pathfinding.
-- **Sprite** (`sprite/_sprite.py`): Drawable entity with animations. Supports rotation, scaling, colour replacement, and linked sprites.
-- **coord** (`_types.py`): Grid-aware coordinate (1-indexed col/row) that also tracks pixel position. Core primitive for positioning.
-- **area** (`_types.py`): Grid-aware rectangular region for spatial queries.
-- **Signals** (`signals.py`): Pub/sub event system (wraps blinker). Used for decoupled communication between game components.
-- **Map** (`map.py`): Spatial grid with blocked/free/open/closed status per tile. Supports A* pathfinding.
-
-### Game Lifecycle
-
-Only when asked to build or enhance games then see @docs/README.md for a guide on how to use the game engine. When asked to work on the engine in `pyke_pyxel` or to add or update tests do not load this file.
-
-1. Create `GameSettings` and configure (window size, FPS, colours, mouse)
-2. Instantiate `Game` or `RPGGame` with settings, title, and `.pyxres` resource path
-3. Connect signal handlers (`Signals.connect()`)
-4. Call `game.start()` to begin the loop
-
-The update loop runs at `settings.fps.game` and processes:
-- Keyboard/mouse input (always)
-- `Signals.GAME.UPDATE` signal (unless paused)
-- Sprite animation frames (unless paused)
-- Draw: background/tilemap, sprites, HUD, FX
-
-### Signal-Driven Design
-
-Games wire logic through signals rather than inheritance:
-- `Signals.GAME.WILL_START` - setup before loop starts
-- `Signals.GAME.UPDATE` - per-frame game logic
-- `Signals.MOUSE.DOWN/UP/MOVE` - mouse input
-- Custom signals for game-specific events (enemy_killed, weapon_selected, etc.)
-
-### Resource Files
-
-Games use `.pyxres` files (Pyxel resource format) containing sprites, tilemaps, sounds. Created with Pyxel's editor or Aseprite exports.
-
-### Key Subsystems
-
-- **HUD** (`hud.py`): On-screen UI elements (buttons, images, text)
-- **FX** (`fx.py`): Visual effects (circular wipes, splatters, camera shake, scaling)
-- **Timer** (`timer.py`): Schedule signals after delays or at intervals
-- **Animation** (`sprite/_anim.py`): Frame-based sprite animations with looping and callbacks
+- See `docs/README.md` for usage guide, lifecycle, and code examples (load with `@docs/README.md` when building or enhancing games).
+- See `docs/pyke_pyxel_API.md` for auto-generated API reference.
+- See `docs/ROADMAP-TESTING.md` for test coverage status and priorities.
+- See `docs/ROADMAP-DOCS.md` for documentation gaps and priorities.
 
 ## Code Conventions
 
-### 1. Python
+### Python
 
 -   **PEP 8**: Follow the PEP 8 style guide for all Python code.
 -   **Naming Conventions**:
@@ -73,36 +38,50 @@ Games use `.pyxres` files (Pyxel resource format) containing sprites, tilemaps, 
 -   **Typing**: Use Python type hints for all new function and method signatures. Analyze existing code for the proper types to use.
 -   **Docstrings**: Add Google-style docstrings to all new public modules, classes, and functions to explain their purpose, arguments, and return values. This is critical as documentation is generated from them.
 
-### 2. Imports
+### Imports
 
 - Organize imports in the standard order:
     1.  Standard library imports (e.g., `os`, `sys`).
     2.  Third-party library imports (e.g., `pyxel`).
     3.  Local application/library imports (e.g., `from pyke_pyxel import draw`).
 
-### 3. Specific Instructions for AI
+### Refactoring
 
 **Refactoring:** When asked to refactor code, prioritize **readability** over extreme micro-optimizations.
 
-### 4. Common Tasks
+### Common Tasks
 
 When asked to perform a task, use the following commands and workflows.
 
-### Testing
+#### Running Games
+
+- `./scripts/run-rpg.sh` — RPG game
+- `./scripts/run-td.sh` — Tower Defense game ("Maw: Gate of Hell")
+
+#### Testing
 
 The tests in the `tests/` folder are implemented using `pytest`.
 
-Run tests with the `./scripts/run-tests.sh`.
+Run tests with `./scripts/run-tests.sh`. To run a specific file: `./scripts/run-tests.sh tests/test_coord.py`.
 
-### Adding and Updating Documentation
+Test coverage is ~24% by class. Core primitives (`coord`, `area`, `Map`, `Sprite`, `Animation`, `Timer`) have good coverage; UI, drawing, and effects modules do not. See `docs/ROADMAP-TESTING.md` for details.
 
-The documentation in `docs/` is generated from source code docstrings using `pydoc-markdown`.
+#### Adding and Updating Documentation
 
-Add Google-style docstrings to all new public modules, classes, and functions to explain their purpose, arguments, and return values. This is critical as API documentation is generated from them.
+The `docs/` directory is organised as follows:
 
-To generate updated API documentation run the script `./scripts/update-docs.sh`.
+- **`docs/README.md`** — Human-first how-to guide for building games with the engine. Keep it readable and example-driven; it should be useful to Claude but written for humans first.
+- **`docs/pyke_pyxel_API.md`** — Auto-generated API reference from source code docstrings. Regenerate with `./scripts/update-docs.sh`.
+- **Stand-alone topic docs** — Additional architectural areas (e.g. drawable, cell_auto) should be documented in their own markdown files in `docs/` and linked from `docs/README.md`.
+- **`docs/ROADMAP-*.md`** — Roadmap and tracking files (e.g. `ROADMAP-TESTING.md`, `ROADMAP-DOCS.md`).
 
-### 5. Game Engine
-- Columns and rows are 1-indexed in `coord` and `area`
+#### Profiling
+
+Run `tools/profiler.py` to benchmark performance.
+
+### Game Engine Rules
+- Columns and rows are 1-indexed in `coord` and `area` — never use 0-indexed grid coordinates
 - Pixel coordinates use `x`/`y`; grid positions use `col`/`row`
 - Sprites are added to Game via `game.add_sprite()` or `Signals.send_add_sprite()`
+- Do not instantiate Pyxel directly — always go through `Game`
+- Do not import from internal `_`-prefixed modules directly — use the public API from package `__init__.py` exports
