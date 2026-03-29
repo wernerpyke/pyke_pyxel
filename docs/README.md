@@ -17,8 +17,6 @@ register a title screen, gameplay screen and a pause/menu screen.
 The `Game` object owns the Pyxel window and drives the tick/update loop; it will call your current screen's update and draw methods each frame. Treat `Game` as the single source of truth for game-wide
 resources (loaded assets, global settings and top-level managers).
 
-The engine ships three game types — `Game`, `RPGGame`, and `CellAutoGame` — each building on the last. See [GAME-TYPES.md](GAME-TYPES.md) for the full comparison and per-type API.
-
 The `Game` object is configured via a `GameSettings` instance.
 
 For example:
@@ -45,6 +43,10 @@ game = Game(settings=settings,
 
 game.start()
 ```
+
+### Additional Information
+
+The engine ships three game types — `Game`, `RPGGame`, and `CellAutoGame` — each building on the last. See [GAME-TYPES.md](GAME-TYPES.md) for the full comparison and per-type API.
 
 --------------------------------
 
@@ -163,9 +165,7 @@ If the game is paused via `game.pause()` then user input and draw is still proce
 `Sprite` is the primary building block for visible entities. Sprites hold a
 current frame and a dictionary of named `Animation` objects. Use `add_animation`
 to register walk, attack, or idle animations, and `activate_animation` to start
-them (optionally looping or invoking a callback when complete). `MovableSprite`
-provides helpers for directional animations and a movement speed; `OpenableSprite`
-models objects with open/closed states (doors, chests).
+them (optionally looping or invoking a callback when complete). 
 
 Typical usage:
 - create a `Sprite` with an idle frame (a `coord` into a resource sheet),
@@ -192,6 +192,18 @@ def game_update(game: Game):
     # Move down one pixel per update (@ 60 FPS)
     my_sprite.position.c2.move_by(y=1)
 ```
+
+### RPG Game Sprites
+
+RPG Games have two specialised sprite classes:
+- `MovableSprite`
+provides helpers for directional animations and a movement speed
+- `OpenableSprite`
+models objects with open/closed states (doors, chests).
+
+### Additional Information
+
+See [SPRITES.md](SPRITES.md) for the full sprite class hierarchy, per-class API, Animation and AnimationFactory usage, and Game integration details.
 
 ---------------------------------
 
@@ -288,10 +300,7 @@ UI-related classes are provided in `Image`, `Button` and `Rect`.
 - `Button` uses `Image` instances to represent `up` and `down` states and offers support for icon and text overlays.
 - `Rect` provides the ability to draw rectangles with/without borders.
 
-See [DRAWABLES.md](DRAWABLES.md) for the full drawable class hierarchy, per-class API, and TileMap background rendering.
-
-Keep HUD code
-separate from game logic: write small presenter functions that turn internal
+Keep HUD code separate from game logic: write small presenter functions that turn internal
 state into text/tiles and hand them to the HUD renderer each frame.
 
 For example:
@@ -314,6 +323,9 @@ def game_started(game: Game):
     game.hud.add_button(start_button)
 
 ```
+
+### Additional Information
+See [DRAWABLES.md](DRAWABLES.md) for the full drawable class hierarchy, per-class API, and TileMap background rendering.
 
 ---------------------------------
 
