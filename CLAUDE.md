@@ -24,7 +24,7 @@ The engine is signal-driven: games wire logic through `Signals` (pub/sub) rather
 - See `docs/README.md` for usage guide, lifecycle, and code examples (load with `@docs/README.md` when building or enhancing games).
 - See `docs/pyke_pyxel_API.md` for auto-generated API reference.
 - See `docs/TESTING.md` for test coverage status and priorities.
-- See `docs/ROADMAP.md` for roadmap items and status
+- See `plans/ROADMAP.md` for roadmap items and status
 
 ## Code Conventions
 
@@ -73,7 +73,12 @@ The `docs/` directory is organised as follows:
 - **`docs/README.md`** — Human-first how-to guide for building games with the engine. Keep it readable and example-driven; it should be useful to Claude but written for humans first.
 - **`docs/pyke_pyxel_API.md`** — Auto-generated API reference from source code docstrings. Regenerate with `./scripts/update-docs.sh`.
 - **Stand-alone topic docs** — Additional architectural areas (e.g. drawable, cell_auto) should be documented in their own markdown files in `docs/` and linked from `docs/README.md`.
-- **`docs/ROADMAP.md`** — Roadmap items and status tracking.
+
+The `plans/` directory holds roadmap and planning documents:
+
+- **`plans/ROADMAP.md`** — Roadmap items and status tracking.
+
+Keep `docs/` for technical documentation (guides, API reference, architecture) and `plans/` for project planning (roadmaps, milestones, design proposals).
 
 #### Profiling
 
