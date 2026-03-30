@@ -9,18 +9,18 @@ Build a reusable Claude Code **skill** that generates working games from a markd
 
 ---
 
-## 1. Skill Commands
+## 1. Skill Command
 
-The skill is split into **four user-invocable commands** that map to the natural workflow phases:
+The skill is a **single coordinator** (`/pykpyx`) with four sub-commands routed via arguments:
 
-| Command            | Purpose                                                                                                                   | Trigger                                                  |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `/pykpyx-create`   | Scaffold a new game project — create required sub-folders and a named spec file from the template                         | Manual (`/pykpyx-create <game-name>`)                    |
-| `/pykpyx-validate` | Validate a game definition markdown file against the template; iterate with the human until it is complete and consistent | Manual (`/pykpyx-validate path/to/spec.md`)              |
-| `/pykpyx-generate` | Generate game code from a validated spec into a target directory                                                          | Manual (`/pykpyx-generate path/to/spec.md [target-dir]`) |
-| `/pykpyx-update`   | Apply incremental changes to an existing game — either from an updated spec or from natural-language instructions         | Manual (`/pykpyx-update path/to/spec.md [target-dir]`)   |
+| Sub-command | Purpose                                                                                                                   | Trigger                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `create`    | Scaffold a new game project — create required sub-folders and a named spec file from the template                         | `/pykpyx create <game-name>`                           |
+| `validate`  | Validate a game definition markdown file against the template; iterate with the human until it is complete and consistent | `/pykpyx validate [path/to/spec.md]`                   |
+| `generate`  | Generate game code from a validated spec into a target directory                                                          | `/pykpyx generate [path/to/spec.md] [target-dir]`     |
+| `update`    | Apply incremental changes to an existing game — either from an updated spec or from natural-language instructions         | `/pykpyx update [path/to/spec.md] [target-dir]`       |
 
-All four are `disable-model-invocation: true` because they produce side-effects (file creation/modification) and the human should control when they run.
+The skill is `disable-model-invocation: true` because all sub-commands produce side-effects (file creation/modification) and the human should control when they run. When invoked without a sub-command, it describes the available workflow.
 
 ---
 
@@ -28,41 +28,71 @@ All four are `disable-model-invocation: true` because they produce side-effects 
 
 ### 2.1 Skill source (in this repo)
 
+The skill uses a **single coordinator** pattern: one `SKILL.md` entry point with conditional loading of per-command instruction files. This avoids the nested skills-within-skills problem (Claude Code does not support sub-skill discovery) while keeping each command's instructions in a separate file that is only loaded into context when needed.
+
 ```
 skill/
-├── SKILL.md                    # /pykpyx — top-level entry point (shared context, sub-command routing)
-├── docs/
-│   ├── GAME-SPEC-TEMPLATE.md  # Stand-alone template for humans to copy and fill in
-│   ├── SKILL-USAGE.md         # Human-readable usage guide for the skill
-│   └── VALIDATION-CHECKLIST.md # Validation rules read by /pykpyx-validate at runtime
-├── pykpyx-create/
-│   └── SKILL.md                # /pykpyx-create — project scaffolding
-├── pykpyx-validate/
-│   └── SKILL.md                # /pykpyx-validate — validation & iteration
-├── pykpyx-generate/
-│   ├── SKILL.md                # /pykpyx-generate — code generation
-│   ├── templates/
-│   │   ├── base_main.py        # Boilerplate for Game-type games
-│   │   ├── rpg_main.py         # Boilerplate for RPGGame
-│   │   ├── rpg_game_loop.py    # RPG handler stubs
-│   │   ├── rpg_game_load.py    # RPG loading stubs
-│   │   └── cell_auto_main.py   # Boilerplate for CellAutoGame (deferred — see §9)
-└── pykpyx-update/
-    └── SKILL.md                # /pykpyx-update — incremental changes
+└── pykpyx/
+    ├── SKILL.md                # /pykpyx — entry point: shared context + argument routing
+    ├── create.md               # Loaded when sub-command is "create"
+    ├── validate.md             # Loaded when sub-command is "validate"
+    ├── generate.md             # Loaded when sub-command is "generate"
+    ├── update.md               # Loaded when sub-command is "update"
+    ├── docs/
+    │   ├── GAME-SPEC-TEMPLATE.md   # Stand-alone template for humans to copy and fill in
+    │   ├── SKILL-USAGE.md          # Human-readable usage guide for the skill
+    │   └── VALIDATION-CHECKLIST.md  # Validation rules read by validate command at runtime
+    └── templates/
+        ├── game/                   # Base Game templates (minimal, working Python files)
+        │   ├── main.py
+        │   ├── game_loop.py
+        │   └── game_load.py
+        └── rpg/                    # RPGGame templates (deferred to later iteration)
+            ├── main.py
+            ├── game_loop.py
+            └── game_load.py
 ```
 
-The top-level `SKILL.md` serves as the `/pykpyx` command. It provides shared context (engine conventions, coordinate rules, signal patterns) and routes the human to the appropriate sub-command. When invoked without arguments it describes the available workflow.
+**How conditional loading works:**
 
-> **Note:** The templates are *not* Jinja/string-interpolation files. They are complete, minimal, working Python files that Claude reads as a starting point and then modifies per the spec. This keeps them human-readable and testable.
+`SKILL.md` contains shared context (engine conventions, coordinate rules, signal patterns) and a routing table. It instructs Claude to read the appropriate command file based on the argument:
+
+```
+If the sub-command is "create", read [create.md](create.md) and follow its instructions.
+If the sub-command is "validate", read [validate.md](validate.md) and follow its instructions.
+...
+```
+
+Only the relevant command file is loaded into context — the others are never read. This keeps context costs minimal while the full instruction set lives in separate, maintainable files.
+
+**Key design points:**
+- Single skill to install/symlink (`pykpyx/`)
+- `SKILL.md` stays small — shared conventions + routing only
+- Per-command files can be as detailed as needed without bloating other commands
+- `allowed-tools` must be the union of all commands' needs (Read, Write, Edit, Glob, Grep, Bash)
+
+#### Template files
+
+Templates live in `skill/pykpyx/templates/` and are complete, minimal, working Python files — not Jinja/string-interpolation files. Claude reads them as a starting point and modifies per the spec.
+
+Current templates for base `Game` type (see `plans/game_creation_skill/templates/game/` for drafts):
+
+| File | Purpose |
+|------|---------|
+| `game/main.py` | Settings, game instantiation, signal wiring, `game.start()` |
+| `game/game_loop.py` | `GameState` dataclass, `start()` and `update()` handlers |
+| `game/game_load.py` | Sprite creation stub, receives game and state |
+
+These templates deliberately carry **no game-specific logic** — no sprites, no input handling, no HUD. The skill adds those per the spec.
 
 ### 2.2 How the skill is discovered
 
 The skill directory is made available in the human's working directory via one of:
 
-- **Symlink**: `.claude/skills/pykpyx-validate -> /path/to/pyxel/skill/pykpyx-validate` (repeat for each command)
-- **Copy**: copy the `skill/` folder into the working directory's `.claude/skills/`
+- **Symlink**: `.claude/skills/pykpyx -> /path/to/pyxel/skill/pykpyx`
+- **Copy**: copy `skill/pykpyx/` into the working directory's `.claude/skills/`
 
-The recommended approach during development is **symlink** so edits in the engine repo are picked up immediately.
+Only one symlink/copy is needed (the single `pykpyx/` directory). The recommended approach during development is **symlink** so edits in the engine repo are picked up immediately.
 
 ---
 
@@ -73,7 +103,7 @@ The skill generates into the **current working directory** (wherever the human l
 ```
 ./                              # Human's working directory
 ├── .claude/
-│   └── skills/ -> ...          # Symlinks or copies of skill/
+│   └── skills/pykpyx/ -> ...   # Symlink or copy of skill/pykpyx/
 ├── specs/
 │   ├── MY-GAME.md              # Primary game spec (per template)
 │   └── MY-GAME-PHASE2.md       # Optional: incremental spec (see §5)
@@ -101,10 +131,10 @@ The skill generates into the **current working directory** (wherever the human l
 
 ## 4. Workflow Detail
 
-### Step 1: Scaffold (`/pykpyx-create`)
+### Step 1: Scaffold (`/pykpyx create`)
 
 ```
-Human: /pykpyx-create "My Game"
+Human: /pykpyx create "My Game"
 ```
 
 The skill:
@@ -113,22 +143,22 @@ The skill:
    - `specs/`
    - `assets/`
    - `scripts/`
-2. Copies `GAME-SPEC-TEMPLATE.md` from `skill/docs/` into `specs/`, renamed to match the game name in UPPERCASE (e.g. `specs/MY-GAME.md`).
+2. Copies `GAME-SPEC-TEMPLATE.md` from `skill/pykpyx/docs/` into `specs/`, renamed to match the game name in UPPERCASE (e.g. `specs/MY-GAME.md`).
 3. Creates `pyproject.toml` (if one doesn't already exist) with the game name and `pyke-pyxel` as a dependency. If one already exists, checks that `pyke-pyxel` is listed as a dependency and warns if it is missing.
 4. Creates `scripts/run_game.sh` — a one-liner that runs the game's `main.py`.
 5. Checks for a `.venv` directory. If none is found, prints a hint: *"Run `uv sync` to set up your environment."*
 6. Reports the created structure and tells the human to fill in the spec file.
 
-### Step 2: Write spec (`/pykpyx-validate`)
+### Step 2: Write spec (`/pykpyx validate`)
 
 ```
 Human fills in specs/MY-GAME.md
-Human: /pykpyx-validate specs/MY-GAME.md
+Human: /pykpyx validate specs/MY-GAME.md
 ```
 
 The skill:
 
-1. Reads `skill/docs/VALIDATION-CHECKLIST.md` to load the current set of validation rules.
+1. Reads `skill/pykpyx/docs/VALIDATION-CHECKLIST.md` to load the current set of validation rules.
 2. Reads the spec file.
 3. Applies each validation rule from the checklist against the spec.
 4. Writes a validation report to `specs/` as a markdown file named after the spec with a `-VALIDATION` suffix (e.g. `specs/MY-GAME-VALIDATION.md`). The report contains:
@@ -137,15 +167,15 @@ The skill:
    - Summary of what will be generated (file list, sprite count, signal count) if all rules pass
 5. Reports the location of the validation file to the human.
 
-### Step 3: Generate (`/pykpyx-generate`)
+### Step 3: Generate (`/pykpyx generate`)
 
 ```
-Human: /pykpyx-generate specs/MY-GAME.md
+Human: /pykpyx generate specs/MY-GAME.md
 ```
 
 The skill:
 
-1. Checks whether game code already exists in the target directory. If it does, **stops** and tells the human to use `/pykpyx-update` instead (unless `--force` is passed — see §5.4).
+1. Checks whether game code already exists in the target directory. If it does, **stops** and tells the human to use `/pykpyx update` instead (unless `--force` is passed — see §5.4).
 2. Re-validates the spec (quick pass — errors abort).
 3. Determines the game type and selects the matching template(s).
 4. Reads the template files, `@docs/README.md`, and `@docs/pyke_pyxel_API.md` for API context.
@@ -158,12 +188,12 @@ The skill:
 7. Attempts to syntax-check the output (`python -m py_compile`).
 8. Reports what was created and how to run it.
 
-### Step 4: Iterate (`/pykpyx-update`)
+### Step 4: Iterate (`/pykpyx update`)
 
 ```
-Human: /pykpyx-update specs/MY-GAME.md
+Human: /pykpyx update specs/MY-GAME.md
   or
-Human: /pykpyx-update "Add a scoring HUD that shows points in the top-left"
+Human: /pykpyx update "Add a scoring HUD that shows points in the top-left"
 ```
 
 See §5 below for how incremental development works.
@@ -178,13 +208,13 @@ See §5 below for how incremental development works.
 
 **Answer: Incremental by default, regenerate on request.**
 
-The `/pykpyx-update` command works as follows:
+The `/pykpyx update` command works as follows:
 
 ### 5.1 Spec-driven updates
 
-The human edits the existing spec file (or adds a new one) and runs `/pykpyx-update`. The skill:
+The human edits the existing spec file (or adds a new one) and runs `/pykpyx update`. The skill:
 
-1. Checks for a corresponding validation report (e.g. `specs/MY-GAME-VALIDATION.md`). If none is found, or if the spec file is newer than the validation report, **warns** the human that the updated spec has not been validated and recommends running `/pykpyx-validate` first. Proceeds only if the human confirms.
+1. Checks for a corresponding validation report (e.g. `specs/MY-GAME-VALIDATION.md`). If none is found, or if the spec file is newer than the validation report, **warns** the human that the updated spec has not been validated and recommends running `/pykpyx validate` first. Proceeds only if the human confirms.
 2. Reads the **current game code** in the target directory.
 2. Reads the **updated spec** (or a new supplementary spec — see §5.3).
 3. Diffs the spec against what is already implemented (by reading the code, not by storing prior state).
@@ -194,10 +224,10 @@ The human edits the existing spec file (or adds a new one) and runs `/pykpyx-upd
 
 ### 5.2 Natural-language updates *(future consideration)*
 
-> **Not in scope for initial implementation.** In a future iteration, `/pykpyx-update` could accept plain English instead of a spec file:
+> **Not in scope for initial implementation.** In a future iteration, `/pykpyx update` could accept plain English instead of a spec file:
 >
 > ```
-> Human: /pykpyx-update "Make the enemies move twice as fast after wave 3"
+> Human: /pykpyx update "Make the enemies move twice as fast after wave 3"
 > ```
 >
 > The skill would read the current game code, apply the described change, and report what was modified.
@@ -230,14 +260,14 @@ Rules:
 - **One file must be the primary spec** — it contains the Game Type, Title, Settings, and Sprites sections.
 - Supplementary files are discovered by following `@` references or hyperlinks in the primary spec.
 - The skill only reads the primary spec file; it resolves supplementary files from the references within it.
-- `/pykpyx-generate` and `/pykpyx-update` always take the primary spec as their argument.
+- `/pykpyx generate` and `/pykpyx update` always take the primary spec as their argument.
 
 ### 5.4 Full regeneration
 
 If the human wants a clean slate:
 
 ```
-Human: /pykpyx-generate specs/MY-GAME.md --force
+Human: /pykpyx generate specs/MY-GAME.md --force
 ```
 
 This overwrites all generated files. The human is warned before proceeding.
@@ -260,7 +290,7 @@ These two files are the single source of truth. No curated subset is maintained 
 Templates are minimal, valid, runnable games. They follow the patterns established in the existing example games (`games/`):
 
 - **base**: `main.py` + `game_loop.py` + `game_load.py` with `Game`, settings, two signal handlers.
-- **rpg**: `main.py` + `game_loop.py` + `game_load.py` + `config.py` with `RPGGame` and all RPG signals pre-wired.
+- **rpg**: `main.py` + `game_loop.py` + `game_load.py` with `RPGGame` and all RPG signals pre-wired.
 - **cell_auto**: `main.py` + `game_loop.py` + `game_load.py` with `CellAutoGame` and matrix setup. *(deferred — see §9)*
 
 The skill reads the template, understands the structure, then **modifies** it per the spec. It does not do string substitution — Claude rewrites the code with full understanding.
@@ -269,14 +299,13 @@ The skill reads the template, understands the structure, then **modifies** it pe
 
 These findings are derived from reverse-engineering the Simple (`games/simple/`) and RPG (`games/rpg/`) games. They inform decisions about the spec template and Python templates.
 
-**Three-file split applies to all game types.** Every generated game uses `main.py` + `game_loop.py` + `game_load.py`. For the RPG, `config.py` is added as a fourth file (sprite catalogue). The split keeps the same responsibilities regardless of game type:
+**Three-file split applies to all game types.** Every generated game uses `main.py` + `game_loop.py` + `game_load.py`. The split keeps the same responsibilities regardless of game type:
 
-| File | Responsibility |
-|---|---|
-| `main.py` | Settings, game instantiation, signal wiring, `game.start()`. Almost entirely boilerplate — game-specific values are slotted in. |
-| `game_loop.py` | Game state dataclass, `start()` and `update()` handlers, input handlers, signal handlers. Most game-specific logic lives here. |
-| `game_load.py` | Sprite creation, positioning, adding sprites to the game. For RPG: room construction (walls, doors). Called from `game_loop.start()`. |
-| `config.py` | *(RPG only)* Sprite catalogue — static factory methods that return configured sprite instances. Pure leaf module with no game imports. |
+| File           | Responsibility                                                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `main.py`      | Settings, game instantiation, signal wiring, `game.start()`. Almost entirely boilerplate — game-specific values are slotted in.        |
+| `game_loop.py` | Game state dataclass, `start()` and `update()` handlers, input handlers, signal handlers. Most game-specific logic lives here.         |
+| `game_load.py` | Sprite creation, positioning, adding sprites to the game. For RPG: room construction (walls, doors). Called from `game_loop.start()`.  |
 
 **No AnimationFactory or SpriteFactory in generated code.** These are convenience classes for manual coding. Generated code should create `Animation` instances and sprites directly — the skill has full context from the spec and doesn't benefit from the factory abstraction.
 
@@ -311,7 +340,7 @@ This pattern:
 - `ENEMY.BLOCKED`: `(enemy: Enemy, value: Sprite)`
 - Custom keyboard signals: `(game: Game)`
 
-**RPG arrow-key movement is boilerplate.** The 16-line press/release pattern for directional movement repeats in every RPG. The `rpg_game_loop.py` template should include it by default.
+**RPG arrow-key movement is boilerplate.** The 16-line press/release pattern for directional movement repeats in every RPG. The `rpg/game_loop.py` template should include it by default.
 
 #### 6.2.2 Spec template gaps identified
 
@@ -325,61 +354,23 @@ The following are areas where `GAME-SPEC-TEMPLATE.md` may need updates, to be re
 6. **HUD text specifics** — The HUD section is too vague to capture `TextSprite` positioning and dynamic behaviour.
 7. **Projectile definitions** — No field for defining projectile sprites, speed, or launch mechanics.
 
-### 6.3 Validation rules (for `/pykpyx-validate`)
+### 6.3 Validation rules (for `/pykpyx validate`)
 
-Validation rules are maintained in `skill/docs/VALIDATION-CHECKLIST.md` — a stand-alone file that the `/pykpyx-validate` skill reads at runtime. This allows the rules to be iterated on independently of the skill instructions.
+Validation rules are maintained in `skill/pykpyx/docs/VALIDATION-CHECKLIST.md` — a stand-alone file that the `validate` command reads at runtime. This allows the rules to be iterated on independently of the skill instructions.
 
 See that file for the current set of checks.
 
-### 6.4 Frontmatter for each skill
+### 6.4 Skill frontmatter
 
-**`/pykpyx`** (top-level)
+Single skill with all tools needed across commands:
+
 ```yaml
 name: pykpyx
-description: pyke_pyxel game creation skill. Describes available sub-commands and shared engine conventions. Use when the user asks about creating a game with pyke_pyxel.
-disable-model-invocation: true
-user-invocable: true
-allowed-tools: Read, Glob, Grep
-```
-
-**`/pykpyx-create`**
-```yaml
-name: pykpyx-create
-description: Scaffold a new pyke_pyxel game project. Creates required folders and a named spec file from the game definition template.
-disable-model-invocation: true
-user-invocable: true
-allowed-tools: Read, Write, Bash, Glob
-argument-hint: <game-name>
-```
-
-**`/pykpyx-validate`**
-```yaml
-name: pykpyx-validate
-description: Validate a pyke_pyxel game specification markdown file. Use when reviewing or iterating on a game definition before code generation.
-disable-model-invocation: true
-user-invocable: true
-allowed-tools: Read, Glob, Grep
-argument-hint: [spec-file]
-```
-
-**`/pykpyx-generate`**
-```yaml
-name: pykpyx-generate
-description: Generate a pyke_pyxel game from a validated specification. Creates game directory with runnable Python code.
+description: "pyke_pyxel game creation skill. Sub-commands: create, validate, generate, update. Use /pykpyx <command> to scaffold, validate, generate, or update games."
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
-argument-hint: [spec-file] [target-dir]
-```
-
-**`/pykpyx-update`**
-```yaml
-name: pykpyx-update
-description: Apply incremental changes to an existing pyke_pyxel game from an updated spec or natural-language description.
-disable-model-invocation: true
-user-invocable: true
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash
-argument-hint: [spec-or-instruction] [target-dir]
+argument-hint: <command> [args...]
 ```
 
 ---
@@ -388,10 +379,10 @@ argument-hint: [spec-or-instruction] [target-dir]
 
 | Question                                | Resolution                                                                                                              |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| What commands should the skill support? | Three: `/pykpyx-validate`, `/pykpyx-generate`, `/pykpyx-update` (§1)                                                    |
-| Folder structure of the skill?          | `skill/{pykpyx-validate,pykpyx-generate,pykpyx-update}/` with templates and reference docs in `pykpyx-generate/` (§2.1) |
+| What commands should the skill support? | Four sub-commands: `create`, `validate`, `generate`, `update` — all via single `/pykpyx` skill (§1)                     |
+| Skill structure?                        | Single coordinator skill with conditional file loading — `SKILL.md` routes to per-command `.md` files (§2.1)            |
 | Folder structure required of the human? | `specs/` for specs, generated game in a named directory, `assets/` for `.pyxres` (§3)                                   |
-| Incremental vs regenerate?              | Incremental by default via `/pykpyx-update`; full regenerate via `/pykpyx-generate --force` (§5)                        |
+| Incremental vs regenerate?              | Incremental by default via `/pykpyx update`; full regenerate via `/pykpyx generate --force` (§5)                        |
 | Multi-file specs?                       | Supported — one primary + supplementary files, merged in filename order (§5.3)                                          |
 
 ---
@@ -400,10 +391,10 @@ argument-hint: [spec-or-instruction] [target-dir]
 
 ### Build Phase 1
 
-1. **Create `skill/` directory structure** and write `SKILL.md` for each command
-2. **Write templates** in `skill/pykpyx-generate/templates/` based on patterns from existing example games
-3. **Implement `/pykpyx-validate`** — validation logic in the skill instructions
-4. **Implement `/pykpyx-generate`** — generation instructions with template reading
+1. **Create `skill/pykpyx/` directory** and write `SKILL.md` (shared context + routing) and `create.md`
+2. **Move templates** from `plans/game_creation_skill/templates/` into `skill/pykpyx/templates/`; add RPG templates when needed
+3. **Write `validate.md`** — validation logic and instructions
+4. **Write `generate.md`** — generation instructions with template reading
 
 ### Test Phase 1
 
@@ -411,7 +402,7 @@ argument-hint: [spec-or-instruction] [target-dir]
 
 ### Build Phase 2
 
-6. **Implement `/pykpyx-update`** — incremental edit instructions
+6. **Write `update.md`** — incremental edit instructions
 
 ### Test Phase 2
 
@@ -419,8 +410,8 @@ argument-hint: [spec-or-instruction] [target-dir]
 
 ### Docs Phase
 
-8. **Write `skill/docs/SKILL-USAGE.md`** — human-readable guide covering the full workflow, commands, folder conventions, and examples
-9. **Document** — mention the skill in `docs/README.md` and reference `skill/docs/SKILL-USAGE.md` for full details
+8. **Write `skill/pykpyx/docs/SKILL-USAGE.md`** — human-readable guide covering the full workflow, commands, folder conventions, and examples
+9. **Document** — mention the skill in `docs/README.md` and reference `skill/pykpyx/docs/SKILL-USAGE.md` for full details
 10. **Document** — move any un-implemented or future reference items to `plans/ROADMAP.md`
 
 ---
@@ -430,24 +421,24 @@ argument-hint: [spec-or-instruction] [target-dir]
 > Update this checklist as each step is completed.
 
 #### Build Phase 1
-- [ ] 1. Create `skill/` directory structure and write `SKILL.md` for each command
-- [ ] 2. Write templates in `skill/pykpyx-generate/templates/`
-- [ ] 3. Implement `/pykpyx-validate`
-- [ ] 4. Implement `/pykpyx-generate`
+- [ ] 1. Create `skill/pykpyx/` directory and write `SKILL.md` + `create.md` *(structure resolved: single coordinator with conditional loading)*
+- [ ] 2. Move templates from `plans/game_creation_skill/templates/` into `skill/pykpyx/templates/`
+- [ ] 3. Write `validate.md`
+- [ ] 4. Write `generate.md`
 
 #### Test Phase 1
 - [ ] 5. End-to-end test (sample spec → validate → generate → run)
 - [ ] 5a. Human manual testing sign-off
 
 #### Build Phase 2
-- [ ] 6. Implement `/pykpyx-update`
+- [ ] 6. Write `update.md`
 
 #### Test Phase 2
 - [ ] 7. Incremental flow test (modify spec → update → verify)
 - [ ] 7a. Human manual testing sign-off
 
 #### Docs Phase
-- [ ] 8. Write `skill/docs/SKILL-USAGE.md`
+- [ ] 8. Write `skill/pykpyx/docs/SKILL-USAGE.md`
 - [ ] 9. Update `docs/README.md` with skill reference
 - [ ] 10. Move deferred items to `plans/ROADMAP.md`
 
