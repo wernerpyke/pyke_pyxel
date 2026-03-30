@@ -154,9 +154,22 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 > RPG-specific sprite types. Static and animated sprites shared with `Game` are defined in the **Sprites** section above.
 
-#### Movable Sprites
+#### Player
 
-> Sprites that move on the grid with directional animations (up, down, left, right). Arrow-key movement for the player is included by default.
+> The player sprite. Created via `game.set_player()` — exactly one per RPGGame. Arrow-key movement is included by default.
+
+- **Default frame:** `<col>,<row>`
+- **Speed:** `<pixels per second>`
+- **Frames per direction:** `<n>`
+- **Directions:**
+  - UP: `<col>,<row>`
+  - DOWN: `<col>,<row>`
+  - LEFT: `<col>,<row>`, flipped *(or own frames)*
+  - RIGHT: `<col>,<row>`
+
+#### Movable Sprites *(optional)*
+
+> Other sprites that move on the grid with directional animations (e.g. NPCs, companions). Does not include the player (above) or enemies (see Enemy Behaviour below).
 
 ##### `<sprite_name>`
 
