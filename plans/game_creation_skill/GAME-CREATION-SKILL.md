@@ -75,7 +75,7 @@ Only the relevant command file is loaded into context — the others are never r
 
 Templates live in `skill/pykpyx/templates/` and are complete, minimal, working Python files — not Jinja/string-interpolation files. Claude reads them as a starting point and modifies per the spec.
 
-Current templates for base `Game` type (see `plans/game_creation_skill/templates/game/` for drafts):
+Current templates for base `Game` type (see `skill/pykpyx/templates/game/`):
 
 | File | Purpose |
 |------|---------|
@@ -392,7 +392,7 @@ argument-hint: <command> [args...]
 ### Build Phase 1
 
 1. **Create `skill/pykpyx/` directory** and write `SKILL.md` (shared context + routing) and `create.md`
-2. **Move templates** from `plans/game_creation_skill/templates/` into `skill/pykpyx/templates/`; add RPG templates when needed
+2. **Templates** in `skill/pykpyx/templates/`; add RPG templates when needed
 3. **Write `validate.md`** — validation logic and instructions
 4. **Write `generate.md`** — generation instructions with template reading
 
@@ -421,10 +421,10 @@ argument-hint: <command> [args...]
 > Update this checklist as each step is completed.
 
 #### Build Phase 1
-- [ ] 1. Create `skill/pykpyx/` directory and write `SKILL.md` + `create.md` *(structure resolved: single coordinator with conditional loading)*
-- [ ] 2. Move templates from `plans/game_creation_skill/templates/` into `skill/pykpyx/templates/`
-- [ ] 3. Write `validate.md`
-- [ ] 4. Write `generate.md`
+- [x] 1. Create `skill/pykpyx/` directory and write `SKILL.md` + `create.md` *(structure resolved: single coordinator with conditional loading)*
+- [x] 2. Templates in `skill/pykpyx/templates/`
+- [x] 3. Write `validate.md`
+- [x] 4. Write `generate.md`
 
 #### Test Phase 1
 - [ ] 5. End-to-end test (sample spec → validate → generate → run)
