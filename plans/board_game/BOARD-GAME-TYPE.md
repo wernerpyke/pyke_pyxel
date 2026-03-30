@@ -1,6 +1,6 @@
 # BoardGame — Design Plan
 
-**Status:** Draft
+**Status:** PAUSED
 **Goal:** Add a new `BoardGame` game type to `pyke_pyxel` that supports turn-based, player-vs-AI board games on a grid layout.
 
 ---
@@ -360,17 +360,55 @@ The human player's turn is **input-driven**: the game stays on their turn across
 
 ---
 
-## 7. Open Questions
+## 7. Implementation Phases
 
-1. ~~**Move validation** — resolved.~~ `Board` validates that positions are within bounds (e.g. col/row >= 1 and within board dimensions). Game-specific rules (e.g. legal chess moves, capturing logic) are validated by overriding `BoardGame.is_valid()` and `BoardGame.enumerate_moves()` in a subclass. Both layers run: board bounds first, then game rules.
+### Phase 1 — Scaffold & Draw Board
 
-2. ~~**AI timing** — resolved.~~ AI moves have a random delay between 0.8 and 1.8 seconds (via `Timer`) before the move is applied. This makes the AI feel like it's "thinking".
+Set up the module structure and get a visible board rendering on screen.
 
-3. ~~**Board rendering** — resolved.~~ `Board._draw()` provides a default rendering (grid lines, cell colouring) that games can override with custom styling.
+- [ ] Create `pyke_pyxel/board/` package with module files per [Section 2.2](#22-module-layout)
+- [ ] Implement `BoardLayout` enum with `GRID` value per [Section 2.3](#23-key-classes)
+- [ ] Implement `Board` class: `__init__`, `cols`, `rows`, `layout`, `is_within_bounds()` per [Section 2.3](#23-key-classes)
+- [ ] Implement `Board._draw()` for grid layout (grid lines, cell colouring) per [Board drawing plan](BOARD-DRAW.md)
+- [ ] Implement `BoardGame(Game)` skeleton: `__init__`, `board` property, `_draw()` override that inserts board rendering between background and sprites per [Section 2.3](#23-key-classes)
+- [ ] Wire `BoardGame` exports in `__init__.py` per [Section 2.2](#22-module-layout)
+- [ ] Verify board renders correctly in a minimal test game
 
-4. **Simultaneous turns (future)** — when we add Poker-style turns, should `TurnManager` be subclassed (`SequentialTurnManager` / `SimultaneousTurnManager`), or use a strategy/mode pattern?
+### Phase 2 — Draw Pieces
 
-5. ~~**Board-to-map position mapping** — resolved.~~ v1 uses 1:1 mapping: board positions map directly to grid col/row positions. Pixel/grid coordinate conversion is already handled by the engine (`coord.with_xy`), so `Board` does not need its own `cell_to_pixel` / `pixel_to_cell` methods. The known limitation — pieces cannot be larger than one sprite frame — is accepted for v1. See **Section 8.1: Multi-grid col/row board positions** for what would need to change to lift this constraint.
+Place pieces on the board and render them as sprites.
+
+- [ ] Implement `Piece` and `Position` data types per [Section 2.5](#25-data-types)
+- [ ] Implement `BoardPieceSprite(Sprite)` (without slide animation) per [Section 2.4](#24-board-sprites)
+- [ ] Implement `Board.place()`, `Board.remove()`, `Board.piece_at()` per [Section 2.3](#23-key-classes)
+- [ ] Add `BOARD.PIECE_PLACED` and `BOARD.PIECE_REMOVED` signals per [Section 3](#3-signals)
+- [ ] Wire piece sprites into `BoardGame._draw()` sprite layer per [Section 2.3](#23-key-classes)
+- [ ] Verify pieces render at correct board positions in a test game
+
+### Phase 3 — Player Turns & Default AI
+
+Add turn management, move validation, and a default random AI.
+
+- [ ] Implement `Player` enum per [Section 2.3](#23-key-classes)
+- [ ] Implement `Move` data type per [Section 2.5](#25-data-types)
+- [ ] Implement `TurnManager`: `current_player`, `turn_number`, `move_history`, `last_move`, `submit_move()`, `is_game_over()`, `winner()` per [Section 2.3](#23-key-classes)
+- [ ] Implement `BoardGame.is_valid()` and `BoardGame.enumerate_moves()` with default implementations per [Section 2.3](#23-key-classes) and [Section 2.5](#25-data-types)
+- [ ] Implement `AI` class with default random `choose_move()` per [Section 2.3](#23-key-classes)
+- [ ] Wire `BoardGame.ai` property and setter per [Section 2.3](#23-key-classes)
+- [ ] Implement `BoardGame._update()` turn-aware logic: human input → submit → AI turn per [Section 2.3](#23-key-classes) and [Section 4](#4-turn-flow-detail--sequential-v1)
+- [ ] Add `BOARD.TURN_STARTED`, `BOARD.TURN_ENDED`, `BOARD.PIECE_MOVE_STARTED`, `BOARD.GAME_OVER` signals per [Section 3](#3-signals)
+- [ ] Verify full human → AI turn cycle works in a test game
+
+### Phase 4 — Animate Pieces & Turns
+
+Add slide animation to piece movement and polish turn pacing.
+
+- [ ] Implement `BoardPieceSprite.slide_to()` and `is_sliding` using pixel accumulator pattern per [Section 2.4](#24-board-sprites)
+- [ ] Add `BOARD.PIECE_MOVE_ENDED` signal fired on slide completion per [Section 3](#3-signals)
+- [ ] Wire auto-animation into `BoardGame`: animate piece on `submit_move()`, delay turn advance until slide completes per [Section 2.4](#24-board-sprites)
+- [ ] Add AI thinking delay (0.8–1.8s random `Timer`) before AI move is applied per [Section 4](#4-turn-flow-detail--sequential-v1)
+- [ ] Verify animated turn flow: human move → slide → AI delay → AI move → slide → next turn
+- [ ] Update `pyke_pyxel/board/__init__.py` public exports per [Section 2.2](#22-module-layout)
 
 ---
 
@@ -442,3 +480,7 @@ The engine would never read or write `metadata` — it is purely for game-level 
 **Open questions:**
 - Is an untyped `dict` sufficient, or should games be encouraged to subclass `Move` with typed fields instead?
 - Should `Piece` also carry `metadata`, or is `kind: str` enough for game-specific piece identity?
+
+### 8.3 Simultaneous turns
+
+When we add Poker-style turns, should `TurnManager` be subclassed (`SequentialTurnManager` / `SimultaneousTurnManager`), or use a strategy/mode pattern?

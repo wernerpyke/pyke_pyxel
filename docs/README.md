@@ -34,8 +34,8 @@ settings.colours.background = COLOURS.BLACK
 settings.colours.sprite_transparency = COLOURS.BEIGE
 
 settings.mouse_enabled = True
-settings.display_smoothing_enabled = True
-settings.full_screen_enabled = False
+settings.display.smoothing = True
+settings.display.full_screen = False
 
 game = Game(settings=settings, 
         title="My Game", 
@@ -190,7 +190,7 @@ def game_start(game: Game):
 
 def game_update(game: Game):
     # Move down one pixel per update (@ 60 FPS)
-    my_sprite.position.c2.move_by(y=1)
+    my_sprite.position.move_by(y=1)
 ```
 
 ### RPG Game Sprites

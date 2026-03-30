@@ -1,6 +1,6 @@
 # New Game Types
 
-- [ ] `BoardGame` — turn-based player-vs-AI board games. See [BOARD-GAME-TYPE.md](BOARD-GAME-TYPE.md) for design plan.
+- [ ] `BoardGame` — turn-based player-vs-AI board games. **PAUSED.** See [board_game/BOARD-GAME-TYPE.md](board_game/BOARD-GAME-TYPE.md) for design plan.
 
 # Documentation
 
