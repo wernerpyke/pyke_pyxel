@@ -1,6 +1,6 @@
 ---
 name: pykpyx
-description: "pyke_pyxel game creation skill. Sub-commands: create, validate, generate, update. Use /pykpyx <command> to scaffold, validate, generate, or update games."
+description: "pyke_pyxel game creation skill. Sub-commands: create, validate, generate, update, clean. Use /pykpyx <command> to scaffold, validate, generate, update, or clean games."
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
@@ -89,6 +89,7 @@ Parse the first argument after `/pykpyx` to determine the sub-command. Pass rema
 - **`validate`** — Read [validate.md](validate.md) and follow its instructions.
 - **`generate`** — Read [generate.md](generate.md) and follow its instructions.
 - **`update`** — Read [update.md](update.md) and follow its instructions.
+- **`clean`** — Read [clean.md](clean.md) and follow its instructions.
 
 If no argument is provided, or the argument is not recognised, display this help:
 
@@ -101,6 +102,7 @@ Available commands:
   /pykpyx validate [path/to/spec.md]    Validate a game spec
   /pykpyx generate [path/to/spec.md]    Generate game code from a validated spec
   /pykpyx update [path/to/spec.md]      Apply incremental changes to an existing game
+  /pykpyx clean [path/to/spec.md]       Delete all generated game code
 
 Workflow:
   1. /pykpyx create "My Game"           — creates folders and spec template
@@ -108,4 +110,5 @@ Workflow:
   3. /pykpyx validate specs/MY-GAME.md  — check spec for errors
   4. /pykpyx generate specs/MY-GAME.md  — generate working game code
   5. /pykpyx update specs/MY-GAME.md    — apply changes after editing the spec
+  6. /pykpyx clean specs/MY-GAME.md     — delete generated code to start fresh
 ```

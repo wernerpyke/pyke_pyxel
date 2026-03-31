@@ -37,17 +37,48 @@ If a file already exists at that path, **do not overwrite it**. Warn the human a
 
 ### 3. Create pyproject.toml
 
-If `pyproject.toml` does not exist in the current working directory, create it:
+If `pyproject.toml` does not exist in the current working directory, create it with the following steps:
+
+#### 3a. Ask for pyke_pyxel location
+
+Before writing the file, ask the human where `pyke_pyxel` is installed. Present the question like this:
+
+> **Where is pyke_pyxel?** I need this to set up the dependency source.
+>
+> 1. Local path (editable install) — e.g. `../pyxel` or `/Users/you/Dark/pyxel`
+> 2. Git URL — e.g. `https://github.com/user/pyxel.git`
+> 3. Skip — I'll configure this myself later
+>
+> Enter a path, URL, or choice number:
+
+**Default heuristic:** Before asking, check whether a directory exists at `../pyxel` (relative to the current working directory) that contains a `pyke_pyxel/` subdirectory. If it does, offer it as the default:
+
+> Found `pyke_pyxel` at `../pyxel`. Use this? (Y/path/URL/skip)
+
+#### 3b. Write the file
+
+Write `pyproject.toml` with the dependency and source configuration:
 
 ```toml
 [project]
-name = "<game-directory-name>"
+name = "<game-name>"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "pyke-pyxel",
 ]
+
+[tool.uv.sources]
+pyke-pyxel = { path = "<local-path>", editable = true }
 ```
+
+Adjust the `[tool.uv.sources]` section based on the human's answer:
+
+- **Local path**: `pyke-pyxel = { path = "<path>", editable = true }` — use the path exactly as provided (relative or absolute).
+- **Git URL**: `pyke-pyxel = { git = "<url>" }` — no `editable` key.
+- **Skip**: Omit the `[tool.uv.sources]` section entirely.
+
+#### 3c. Existing pyproject.toml
 
 If `pyproject.toml` already exists, read it and check whether `pyke-pyxel` appears in the dependencies. If it does not, warn the human: *"`pyke-pyxel` is not listed as a dependency in pyproject.toml. Add it to your dependencies."*
 
@@ -56,11 +87,27 @@ If `pyproject.toml` already exists, read it and check whether `pyke-pyxel` appea
 Write `scripts/run_game.sh`:
 
 ```bash
-#!/bin/bash
-cd "$(dirname "$0")/.." && python -m <game_directory>.main
+#!/usr/bin/env bash
+# Run <game_directory>/main.py using uv.
+# Usage: ./scripts/run_game.sh [extra pyxel args]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TARGET="$REPO_ROOT/<game_directory>/main.py"
+
+if [ ! -f "$TARGET" ]; then
+  echo "Error: target script not found: $TARGET" >&2
+  exit 2
+fi
+
+export PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+exec uv run --project "$REPO_ROOT" pyxel run "$TARGET" "$@"
 ```
 
-Replace `<game_directory>` with the derived game directory name (snake_case).
+Replace `<game_directory>` with the derived game directory name (snake_case). Also replace it in the comment on line 2.
 
 Make the file executable (`chmod +x`).
 

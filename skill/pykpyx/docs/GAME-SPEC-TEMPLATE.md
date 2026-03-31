@@ -44,25 +44,58 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ## Game State
 
-> Declare the mutable state the game tracks across frames. Each field becomes part of a centralised `GameState` dataclass. Include sprite references that handlers need access to.
+> Declare the mutable state the game tracks across frames for gameplay purposes (score, lives, wave number, etc.). Each field becomes part of a centralised `GameState` dataclass.
+>
+> **Note:** You do not need to declare sprite references here. The skill automatically adds sprite references and internal state fields based on the Entities and Sprites sections.
 
-| Field            | Type            | Default         | Description                         |
-| ---------------- | --------------- | --------------- | ----------------------------------- |
-| `<field_name>`   | `<python type>` | `<default>`     | `<what this field tracks>`          |
+| Field          | Type          | Default     | Description                |
+| -------------- | ------------- | ----------- | -------------------------- |
+| `<field_name>` | `<data type>` | `<default>` | `<what this field tracks>` |
 
 *Example:*
 
-| Field           | Type             | Default       | Description                       |
-| --------------- | ---------------- | ------------- | --------------------------------- |
-| `destination`   | `coord`          | `coord(1, 1)` | Where the player sprite is moving |
-| `score`         | `int`            | `0`           | Current player score              |
-| `player_sprite` | `Sprite \| None` | `None`        | Reference to the player sprite    |
+| Field         | Type     | Default        | Description                        |
+| ------------- | -------- | -------------- | ---------------------------------- |
+| `score`       | `int`    | `0`            | Current player score               |
+| `lives`       | `int`    | `3`            | Remaining player lives             |
+| `target`      | `string` | `enemy_boss`   | The current target of the player   |
+| `destination` | `colrow` | `colrow(10,5)` | The next destination of the player |
+
+---
+
+## Entities
+
+> Map logical game roles to sprites and declare per-entity properties. Each entity connects a name used in Input, Game Start, and Game Update to a specific sprite defined in the Sprites section.
+>
+> Speed is an entity property — do not duplicate it in the Sprites section.
+
+### `<entity_name>`
+
+- **Sprite:** `<sprite_name>` *(must match a name in the Sprites section)*
+- **Speed:** `<n> px per second` *(optional — omit for static entities)*
+- **Description:** `<natural-language description of this entity's role and behaviour>`
+
+*Example:*
+
+### `Player`
+
+- **Sprite:** `Ship`
+- **Speed:** `10 px per second`
+- **Description:** The player-controlled ship. Moves in four directions via keyboard. Cannot leave the screen boundaries.
+
+### `Enemy`
+
+- **Sprite:** `Alien`
+- **Speed:** `5 px per second`
+- **Description:** Descends from the top of the screen. Destroyed on collision with a projectile.
 
 ---
 
 ## Sprites
 
-> Define each sprite used in the game. For RPGGame-specific sprite types (movable, openable, projectile), see the **RPG** section below.
+> Define each sprite's visual data — frames and animations. Do not include movement speed here; speed belongs in the Entities section.
+>
+> All frame positions use `colrow(<col>,<row>)` format with 1-indexed positive integers. The `colrow()` wrapper makes it explicit that the first value is a column and the second is a row.
 
 ### Static Sprites
 
@@ -70,7 +103,7 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 #### `<sprite_name>`
 
-- **Frame:** `<col>,<row>` *(1-indexed position in the sprite sheet)*
+- **Frame:** `colrow(<col>,<row>)`
 
 ### Animated Sprites
 
@@ -78,10 +111,13 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 #### `<sprite_name>`
 
-- **Default frame:** `<col>,<row>`
+- **Default frame:** `colrow(<col>,<row>)`
 - **Animations:**
-  - `<name>`: at `<col>,<row>`, `<n>` frames
-  - `<name>`: at `<col>,<row>`, `<n>` frames, flipped
+  - `<name>`: at `colrow(<col>,<row>)`, `<n>` frames
+  - `<name>`: at `colrow(<col>,<row>)`, `<n>` frames, flipped
+  - `<name>`: at `colrow(<col>,<row>)`, `<n>` frames, no-loop
+
+> Animations loop by default. Add `no-loop` to play the animation once and stop on the last frame.
 
 ---
 
@@ -91,9 +127,21 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ### Keyboard *(optional)*
 
-| Key       | Action                              |
-| --------- | ----------------------------------- |
-| `<key>`   | `<what it does>`                    |
+> List each key with its pressed and released actions. Use `none` if nothing happens on release.
+
+- `<KEY>`:
+  - **Pressed:** `<what happens when key is pressed>`
+  - **Released:** `<what happens when key is released>`
+
+*Example:*
+
+- `UP`:
+  - **Pressed:** Start Player 'idle' animation, move Player towards the top of the screen
+  - **Released:** Stop Player movement
+
+- `SPACE`:
+  - **Pressed:** Fire projectile from Player position
+  - **Released:** none
 
 ### Mouse *(optional)*
 
@@ -106,12 +154,12 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ## HUD
 
-> Describe on-screen text and status displays.
+> Describe on-screen text and status displays. All positions use `colrow(<col>,<row>)` format.
 
 ### `<element_name>`
 
 - **Type:** text | score | indicator
-- **Position:** `(<col>,<row>)`
+- **Position:** `colrow(<col>,<row>)`
 - **Initial value:** `<text or number>`
 - **Dynamic behaviour:** `<how it changes (e.g. "updates on score change", "cycles colour each frame")>`
 
@@ -119,7 +167,7 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ## Game Start
 
-> What happens when the game starts? Describe initial setup: creating sprites, placing them, setting initial state.
+> What happens when the game starts? Describe initial setup: creating sprites, placing them, setting initial state. Natural language is fine — the skill will ask for clarification if anything is ambiguous.
 
 ---
 
@@ -153,19 +201,21 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 ### RPG Sprites
 
 > RPG-specific sprite types. Static and animated sprites shared with `Game` are defined in the **Sprites** section above.
+>
+> All frame positions use `colrow(<col>,<row>)` format with 1-indexed positive integers.
 
 #### Player
 
 > The player sprite. Created via `game.set_player()` — exactly one per RPGGame. Arrow-key movement is included by default.
 
-- **Default frame:** `<col>,<row>`
+- **Default frame:** `colrow(<col>,<row>)`
 - **Speed:** `<pixels per second>`
 - **Frames per direction:** `<n>`
 - **Directions:**
-  - UP: `<col>,<row>`
-  - DOWN: `<col>,<row>`
-  - LEFT: `<col>,<row>`, flipped *(or own frames)*
-  - RIGHT: `<col>,<row>`
+  - UP: `colrow(<col>,<row>)`
+  - DOWN: `colrow(<col>,<row>)`
+  - LEFT: `colrow(<col>,<row>)`, flipped *(or own frames)*
+  - RIGHT: `colrow(<col>,<row>)`
 
 #### Movable Sprites *(optional)*
 
@@ -173,14 +223,14 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ##### `<sprite_name>`
 
-- **Default frame:** `<col>,<row>`
+- **Default frame:** `colrow(<col>,<row>)`
 - **Speed:** `<pixels per second>`
 - **Frames per direction:** `<n>`
 - **Directions:**
-  - UP: `<col>,<row>`
-  - DOWN: `<col>,<row>`
-  - LEFT: `<col>,<row>`, flipped *(or own frames)*
-  - RIGHT: `<col>,<row>`
+  - UP: `colrow(<col>,<row>)`
+  - DOWN: `colrow(<col>,<row>)`
+  - LEFT: `colrow(<col>,<row>)`, flipped *(or own frames)*
+  - RIGHT: `colrow(<col>,<row>)`
 
 #### Openable Sprites
 
@@ -188,8 +238,8 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ##### `<sprite_name>`
 
-- **Closed frame:** `<col>,<row>`
-- **Open frame:** `<col>,<row>`
+- **Closed frame:** `colrow(<col>,<row>)`
+- **Open frame:** `colrow(<col>,<row>)`
 
 #### Projectile Sprites *(optional)*
 
@@ -197,33 +247,33 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 ##### `<sprite_name>`
 
-- **Frame:** `<col>,<row>`
-- **Animation:** at `<col>,<row>`, `<n>` frames *(looping)*
+- **Frame:** `colrow(<col>,<row>)`
+- **Animation:** at `colrow(<col>,<row>)`, `<n>` frames *(looping)*
 - **Speed:** `<pixels per second>`
 
 ### Room Layout
 
-> Describe the room contents and their grid positions. All coordinates are 1-indexed (col, row).
+> Describe the room contents and their grid positions. All coordinates use `colrow(<col>,<row>)` format, 1-indexed.
 
 #### Walls
 
 > List each wall placement. Use ranges for horizontal or vertical runs.
 
-- `<sprite_name>` at `(<col>,<row>)`
-- `<sprite_name>` horizontal from `(<col>,<row>)` to `(<col>,<row>)`
-- `<sprite_name>` vertical from `(<col>,<row>)` to `(<col>,<row>)`
+- `<sprite_name>` at `colrow(<col>,<row>)`
+- `<sprite_name>` horizontal from `colrow(<col>,<row>)` to `colrow(<col>,<row>)`
+- `<sprite_name>` vertical from `colrow(<col>,<row>)` to `colrow(<col>,<row>)`
 
 #### Doors *(optional)*
 
-- `<sprite_name>` at `(<col>,<row>)`, initially open | closed
+- `<sprite_name>` at `colrow(<col>,<row>)`, initially open | closed
 
 #### Player Start
 
-- Position: `(<col>,<row>)`
+- Position: `colrow(<col>,<row>)`
 
 #### Enemies *(optional)*
 
-- `<sprite_name>` at `(<col>,<row>)`
+- `<sprite_name>` at `colrow(<col>,<row>)`
 
 ### Collision and Blocking *(optional)*
 
@@ -242,3 +292,20 @@ Delete any sections that don't apply to your game type. Sections marked *(option
 
 - **Movement:** `<how it moves (e.g. random direction, patrol, chase player)>`
 - **On blocked:** `<what happens when movement is blocked>`
+
+---
+
+## Claude Clarifications
+
+> **Do not fill in this section yourself.** This section is written by the `generate` command when it encounters ambiguous or unclear requirements and asks you (the human) to clarify. Each entry records the question asked and the answer given, so the spec remains a complete record of all design decisions.
+>
+> If this section is empty or absent, no clarifications were needed.
+
+<!-- Example entry (written by generate):
+
+### Movement speed units
+- **Question:** Entity "Enemy" speed is "slow" — what speed in px per second?
+- **Answer:** 3 px per second
+- **Applied to:** Entities > Enemy > Speed
+
+-->

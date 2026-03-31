@@ -452,3 +452,4 @@ argument-hint: <command> [args...]
 - The skill assumes the target project has `pyke-pyxel` installed (editable or from package).
 - `.pyxres` asset files are created by the human — the skill does not generate or modify them.
 - The skill does not handle game deployment, packaging, or distribution.
+- The skill does not check for the presence of `uv` at scaffold time. The generated run script requires `uv`, but missing-tool errors are clear enough at execution time — no pre-flight check is needed.
