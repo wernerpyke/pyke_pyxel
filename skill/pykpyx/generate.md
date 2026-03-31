@@ -202,8 +202,6 @@ Generated game "<title>" in <target-dir>/:
 
 Run with:
   ./scripts/run_game.sh
-  — or —
-  python -m <target-dir>.main
 
 To make changes, edit specs/<SPEC-NAME>.md and run:
   /pykpyx update specs/<SPEC-NAME>.md
